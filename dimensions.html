@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='6' fill='none' stroke='%23fff' stroke-width='4'/><circle cx='50' cy='50' r='2' fill='%23fff'/></svg>"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="7 Dimensions — a scroll-driven journey from a point through spacetime to the edge of metaphor. Part of SCALE."
+    />
+    <title>7 Dimensions — SCALE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Syne:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <canvas id="webgl" aria-hidden="true"></canvas>
+
+    <div id="text-overlay" aria-live="polite"></div>
+
+    <div id="hud">
+      <a class="brand brand-link" href="/">SCALE</a>
+      <p class="journey-name">7 Dimensions</p>
+      <p id="dim-label" class="dim-label">Intro</p>
+      <div class="progress-track" aria-hidden="true">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </div>
+
+    <main id="scroll-root">
+      <section class="scroll-section" data-section="intro" id="section-intro">
+        <div class="section-spacer"></div>
+      </section>
+      <section class="scroll-section" data-section="0" id="section-0">
+        <div class="section-spacer"></div>
+      </section>
+      <section class="scroll-section" data-section="1" id="section-1">
+        <div class="section-spacer"></div>
+      </section>
+      <section class="scroll-section" data-section="2" id="section-2">
+        <div class="section-spacer"></div>
+      </section>
+      <section class="scroll-section" data-section="3" id="section-3">
+        <div class="section-spacer"></div>
+      </section>
+      <section class="scroll-section" data-section="4" id="section-4">
+        <div class="section-spacer"></div>
+      </section>
+      <section class="scroll-section" data-section="5" id="section-5">
+        <div class="section-spacer"></div>
+      </section>
+      <section class="scroll-section" data-section="6" id="section-6">
+        <div class="section-spacer"></div>
+      </section>
+      <section class="scroll-section" data-section="7" id="section-7">
+        <div class="section-spacer"></div>
+      </section>
+      <section class="scroll-section" data-section="coda" id="section-coda">
+        <div class="section-spacer"></div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -2,66 +2,73 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='8' fill='%23e8f4ff'/></svg>" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='6' fill='none' stroke='%23fff' stroke-width='4'/><circle cx='50' cy='50' r='2' fill='%23fff'/></svg>"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="All 7 Dimensions — a scroll-driven journey from a point through spacetime to the edge of metaphor."
+      content="SCALE — a visual simulation tool for perspective across dimensions, cosmic size, consciousness, and civilizations."
     />
-    <title>All 7 Dimensions</title>
+    <title>SCALE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Syne:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
-    <canvas id="webgl" aria-hidden="true"></canvas>
+    <!--
+      THESIS: SCALE is a quiet void of perspective — environments are selectable tracks in a vast cinematic field, not marketing cards.
+      OWN-WORLD: Absolute black vacuum; full-bleed hero film; Bricolage Grotesque brand; Azeret Mono HUD; film grain.
+      STORY: Visitor understands this is a simulation hub for perspective; enters a live environment or notes coming soon.
+      FIRST VIEWPORT: SCALE dominates; one supporting line; env list as track legend; looping grayscale cinematic video full-bleed behind.
+      FORM: Vast monochrome vacuum (seed 990af282 → particle void), restrained mono; user brief pins B&W over colorful challengers.
+    -->
+    <video
+      id="hero-video"
+      class="hero-video"
+      aria-hidden="true"
+      src="/landing-hero.mp4"
+      muted
+      autoplay
+      loop
+      playsinline
+      webkit-playsinline
+      preload="auto"
+    ></video>
+    <div class="hero-veil" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
 
-    <div id="text-overlay" aria-live="polite"></div>
+    <div class="frame">
+      <header class="chrome">
+        <p class="coord" id="coord" aria-hidden="true">
+          <span class="coord-axis">X</span>
+          <span class="coord-val" data-axis="x">50.00</span>
+          <span class="coord-sep">·</span>
+          <span class="coord-axis">Y</span>
+          <span class="coord-val" data-axis="y">50.00</span>
+        </p>
+      </header>
 
-    <div id="hud">
-      <p class="brand">All 7 Dimensions</p>
-      <p id="dim-label" class="dim-label">Intro</p>
-      <div class="progress-track" aria-hidden="true">
-        <div id="progress-fill" class="progress-fill"></div>
-      </div>
+      <main class="stage">
+        <div class="brand-block">
+          <h1 class="brand">SCALE</h1>
+          <p class="tagline">
+            Relating what you know to what you don’t — a sense of depth across existence.
+          </p>
+        </div>
+
+        <nav class="env-nav" id="env-nav" aria-label="Environments"></nav>
+      </main>
+
+      <footer class="chrome foot">
+        <p class="hint">Select a track to enter</p>
+      </footer>
     </div>
 
-    <main id="scroll-root">
-      <section class="scroll-section" data-section="intro" id="section-intro">
-        <div class="section-spacer"></div>
-      </section>
-      <section class="scroll-section" data-section="0" id="section-0">
-        <div class="section-spacer"></div>
-      </section>
-      <section class="scroll-section" data-section="1" id="section-1">
-        <div class="section-spacer"></div>
-      </section>
-      <section class="scroll-section" data-section="2" id="section-2">
-        <div class="section-spacer"></div>
-      </section>
-      <section class="scroll-section" data-section="3" id="section-3">
-        <div class="section-spacer"></div>
-      </section>
-      <section class="scroll-section" data-section="4" id="section-4">
-        <div class="section-spacer"></div>
-      </section>
-      <section class="scroll-section" data-section="5" id="section-5">
-        <div class="section-spacer"></div>
-      </section>
-      <section class="scroll-section" data-section="6" id="section-6">
-        <div class="section-spacer"></div>
-      </section>
-      <section class="scroll-section" data-section="7" id="section-7">
-        <div class="section-spacer"></div>
-      </section>
-      <section class="scroll-section" data-section="coda" id="section-coda">
-        <div class="section-spacer"></div>
-      </section>
-    </main>
-
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/landing/main.ts"></script>
   </body>
 </html>

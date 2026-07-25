@@ -1,0 +1,334 @@
+:root {
+  --void: #000000;
+  --signal: #ffffff;
+  --signal-dim: #9a9a9a;
+  --signal-faint: #6e6e6e;
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-hud: 'Azeret Mono', ui-monospace, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--void);
+  color: var(--signal);
+  font-family: var(--font-display);
+  overflow: hidden;
+}
+
+#webgl {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hero-video {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  background: var(--void);
+  pointer-events: none;
+  display: block;
+  /* Binding brief: strict black & white — strip Veo color before UI */
+  filter: grayscale(1) contrast(1.05) brightness(0.92);
+  transition: filter 0.35s ease;
+}
+
+.hero-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* Quiet the film so SCALE + track legend stay signal-over-noise */
+  background:
+    radial-gradient(
+      ellipse 75% 65% at 28% 58%,
+      transparent 0%,
+      rgba(0, 0, 0, 0.28) 42%,
+      rgba(0, 0, 0, 0.62) 78%,
+      rgba(0, 0, 0, 0.82) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.2) 38%,
+      rgba(0, 0, 0, 0.15) 62%,
+      rgba(0, 0, 0, 0.4) 100%
+    ),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, transparent 22%, transparent 72%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+.frame {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100dvh;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  pointer-events: none;
+}
+
+.chrome {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  pointer-events: none;
+}
+
+.coord,
+.hint,
+.env-index,
+.env-status,
+.env-blurb {
+  font-family: var(--font-hud);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--signal-dim);
+  margin: 0;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+
+/* Instrument readout — tabular digits so the HUD doesn't jitter as values change */
+.coord {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.coord-axis {
+  letter-spacing: 0.14em;
+}
+
+.coord-val {
+  display: inline-block;
+  min-width: 5.2ch;
+  letter-spacing: 0.06em;
+}
+
+.coord-sep {
+  margin: 0 0.55em;
+  letter-spacing: 0;
+  opacity: 0.75;
+}
+
+.foot {
+  justify-content: flex-start;
+}
+
+.hint {
+  color: var(--signal-faint);
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: 1fr minmax(14rem, 22rem);
+  align-items: end;
+  gap: clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(1rem, 4vh, 3rem) 0;
+  pointer-events: none;
+}
+
+.brand-block {
+  max-width: 28rem;
+  pointer-events: none;
+}
+
+.brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 12vw, 7.5rem);
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: var(--signal);
+  text-transform: uppercase;
+  text-shadow: 0 0 40px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.tagline {
+  margin: 1.1rem 0 0;
+  max-width: 28ch;
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: var(--signal-dim);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.65);
+}
+
+.env-nav {
+  pointer-events: auto;
+  align-self: end;
+}
+
+.env-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border-top: 1px solid var(--signal-faint);
+}
+
+.env-item {
+  border-bottom: 1px solid var(--signal-faint);
+}
+
+.env-control {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 0.75rem;
+  row-gap: 0.35rem;
+  width: 100%;
+  padding: 0.85rem 0.15rem;
+  margin: 0;
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+  transition: opacity 0.25s ease, color 0.25s ease;
+}
+
+.env-control:focus-visible {
+  outline: 1px solid var(--signal);
+  outline-offset: 4px;
+}
+
+.env-index {
+  grid-row: 1;
+  grid-column: 1;
+  align-self: center;
+  color: var(--signal-faint);
+}
+
+.env-label {
+  grid-row: 1;
+  grid-column: 2;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--signal);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.65);
+}
+
+.env-status {
+  grid-row: 1;
+  grid-column: 3;
+  align-self: center;
+  color: var(--signal-dim);
+}
+
+.env-blurb {
+  grid-row: 2;
+  grid-column: 2 / 4;
+  max-width: 36ch;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--signal-faint);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@media (hover: none) {
+  .env-blurb {
+    opacity: 0.85;
+    transform: none;
+  }
+}
+
+.env-item--soon .env-label {
+  color: var(--signal-dim);
+}
+
+.env-item--soon .env-control {
+  cursor: default;
+}
+
+.env-control:hover .env-blurb,
+.env-control:focus-visible .env-blurb {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.env-item--live .env-control:hover .env-label,
+.env-item--live .env-control:focus-visible .env-label {
+  color: var(--signal);
+}
+
+.env-item--live .env-control:hover .env-status,
+.env-item--live .env-control:focus-visible .env-status {
+  color: var(--signal);
+}
+
+@media (max-width: 820px) {
+  .stage {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 2.5rem;
+    padding-top: 2rem;
+  }
+
+  .brand {
+    font-size: clamp(3.2rem, 18vw, 5rem);
+  }
+
+  .env-nav {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .env-control,
+  .env-blurb {
+    transition: none;
+  }
+
+  .grain {
+    opacity: 0.04;
+  }
+
+  .hero-video {
+    filter: grayscale(1) contrast(1.05) brightness(0.88);
+  }
+}
