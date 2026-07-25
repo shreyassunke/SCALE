@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "veo": {
+      "command": "uvx",
+      "args": ["mcp-veo3", "--output-dir", "./assets/generated-video"],
+      "env": {
+        "GEMINI_API_KEY": "PASTE_KEY_HERE",
+        "DEFAULT_MODEL": "veo-3.1-fast-generate-preview",
+        "DEFAULT_ASPECT_RATIO": "16:9"
+      }
+    }
+  }
+}
