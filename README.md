@@ -34,4 +34,4 @@ Copy lives in `src/content/copy.ts`. Beats for 5D–7D carry a **Metaphor** tag 
 
 ## Architecture
 
-Scroll maps to a continuous `dimension` float (`2.4` = 40% through 2D→3D). Camera, morphs, and captions all read from that value.
+Scroll maps to a continuous `dimension` float held per section so commentary and visuals stay locked. Camera, morphs, and captions all read from that value.
