@@ -271,6 +271,14 @@ body {
 }
 
 .brand {
+  --brand-lx: 0.72;
+  --brand-ly: 0.22;
+  --brand-i: 0.55;
+  --brand-angle: 128deg;
+  --brand-glow: 0.4;
+  --brand-ox: 3;
+  --brand-oy: -2;
+
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(3.25rem, 11vw, 7.5rem);
@@ -280,6 +288,41 @@ body {
   color: var(--signal);
   text-transform: uppercase;
   text-shadow: 0 0 40px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Light-room: SCALE as metal catching film luminance (strict mono, AA large text) */
+.brand.brand--lit {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* Floor greys ≥ signal-faint (~4.5:1 on void) so crushed metal never fails contrast */
+  background-image:
+    radial-gradient(
+      ellipse 42% 55% at calc(var(--brand-lx) * 100%) calc(var(--brand-ly) * 100%),
+      rgb(255, 255, 255) 0%,
+      rgba(255, 255, 255, calc(0.62 + var(--brand-i) * 0.38)) 14%,
+      rgba(255, 255, 255, calc(0.16 + var(--brand-i) * 0.22)) 36%,
+      transparent 58%
+    ),
+    linear-gradient(
+      var(--brand-angle),
+      var(--signal-faint) 0%,
+      var(--signal-dim) 22%,
+      var(--signal) 46%,
+      var(--signal-dim) 68%,
+      var(--signal-faint) 100%
+    );
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: none;
+  /* One depth shadow + one directional bloom (no omni halo) */
+  filter:
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.65))
+    drop-shadow(
+      calc(var(--brand-ox) * 1px)
+      calc(var(--brand-oy) * 1px)
+      calc(6px + var(--brand-glow) * 14px)
+      rgba(255, 255, 255, calc(0.04 + var(--brand-glow) * 0.22))
+    );
 }
 
 .tagline {
@@ -687,4 +730,5 @@ html.cmd-palette-open {
     filter: grayscale(1) contrast(1.05) brightness(0.88);
     transition: none;
   }
+
 }

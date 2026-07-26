@@ -75,7 +75,7 @@ One full-viewport composition. Brand and tagline anchor left/center; environment
 
 ## Elevation & Depth
 
-Depth comes from the hero film and a quiet black veil, not drop shadows. Soft text shadows keep HUD legible over bright frames. Optional film grain as a flat CSS overlay at low opacity.
+Depth comes from the hero film and a quiet black veil, not drop shadows. Soft text shadows keep HUD legible over bright frames. Optional film grain as a flat CSS overlay at low opacity. The hub brand word **SCALE** uses a live light-room treatment: metallic fill + specular highlight driven by sampled hero-video luminance (strict mono; no hue). Reduced-motion falls back to a static sheen.
 
 ## Shapes
 

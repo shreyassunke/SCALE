@@ -4,6 +4,7 @@ import { createCoordinates } from './ui/Coordinates'
 import { createTrackRail } from './ui/TrackRail'
 import { createCommandPalette } from './ui/CommandPalette'
 import { createLandingVideo } from './video/LandingVideo'
+import { createBrandLightRoom } from './video/BrandLightRoom'
 
 const video = document.querySelector<HTMLVideoElement>('#hero-video')
 const nav = document.querySelector<HTMLElement>('#env-nav')
@@ -17,7 +18,12 @@ if (!video || !nav || !coord) {
   throw new Error('Missing landing roots')
 }
 
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 const bg = createLandingVideo(video)
+const lightRoom = brand
+  ? createBrandLightRoom(video, brand, { reduceMotion })
+  : null
 const coordinates = createCoordinates(coord)
 
 const palette = createCommandPalette({
@@ -27,8 +33,6 @@ const palette = createCommandPalette({
 const rail = createTrackRail(nav, { scene: bg })
 
 browseTrigger?.addEventListener('click', () => palette.open())
-
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 // Entrance: brand first, then chrome — delayed slightly so the film can start
 const entranceTargets = [brand, tagline, ...chrome].filter(
@@ -49,6 +53,7 @@ if (import.meta.hot) {
     coordinates.destroy()
     rail.destroy()
     palette.destroy()
+    lightRoom?.dispose()
     bg.dispose()
   })
 }
