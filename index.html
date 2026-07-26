@@ -6,7 +6,10 @@
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='6' fill='none' stroke='%23fff' stroke-width='4'/><circle cx='50' cy='50' r='2' fill='%23fff'/></svg>"
     />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <meta
       name="description"
       content="SCALE — a visual simulation tool for perspective across dimensions, cosmic size, consciousness, and civilizations."
@@ -45,10 +48,10 @@
     <div class="frame">
       <header class="chrome">
         <p class="coord" id="coord" aria-hidden="true">
-          <span class="coord-axis">X</span>
+          <span class="coord-axis">x</span>
           <span class="coord-val" data-axis="x">50.00</span>
           <span class="coord-sep">·</span>
-          <span class="coord-axis">Y</span>
+          <span class="coord-axis">y</span>
           <span class="coord-val" data-axis="y">50.00</span>
         </p>
       </header>
@@ -59,14 +62,23 @@
           <p class="tagline">
             Relating what you know to what you don’t — a sense of depth across existence.
           </p>
+          <div class="hint-block">
+            <p class="hint">Select a track to enter</p>
+            <button
+              type="button"
+              class="browse-trigger"
+              id="browse-trigger"
+              aria-label="Browse all tracks"
+            >
+              <span class="browse-trigger__label">or press</span>
+              <span class="browse-trigger__key" aria-hidden="true">/</span>
+              <span class="browse-trigger__label">to browse all tracks</span>
+            </button>
+          </div>
         </div>
 
         <nav class="env-nav" id="env-nav" aria-label="Environments"></nav>
       </main>
-
-      <footer class="chrome foot">
-        <p class="hint">Select a track to enter</p>
-      </footer>
     </div>
 
     <script type="module" src="/src/landing/main.ts"></script>

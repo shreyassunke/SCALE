@@ -1,0 +1,255 @@
+/* Cosmic Scale — neal.fun shelf comparison, SCALE chrome */
+
+:root {
+  --void: #000000;
+  --signal: #ffffff;
+  --signal-dim: #9a9a9a;
+  --signal-faint: #767676;
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-hud: 'Azeret Mono', ui-monospace, monospace;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--void);
+  color: var(--signal);
+  font-family: var(--font-display);
+  overflow: hidden;
+  touch-action: none;
+}
+
+#webgl {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+}
+
+/* Almost no grain — keep the void clean like neal.fun */
+.grain {
+  display: none;
+}
+
+#hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.35rem 1.75rem;
+  pointer-events: none;
+  background: none;
+}
+
+.brand-link {
+  pointer-events: auto;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--signal);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.15rem;
+}
+
+.brand-link:hover,
+.brand-link:focus-visible {
+  opacity: 0.65;
+}
+
+.brand-link:focus-visible {
+  outline: 1px solid var(--signal);
+  outline-offset: 4px;
+}
+
+.journey-name {
+  display: none;
+}
+
+#focus-overlay {
+  position: fixed;
+  left: 50%;
+  top: 12%;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: min(92vw, 36rem);
+  text-align: center;
+  pointer-events: none;
+}
+
+.focus-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 8vw, 5rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--signal);
+  text-shadow: none;
+}
+
+.focus-blurb {
+  margin: 0.65rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--signal-dim);
+}
+
+.focus-scale {
+  display: none;
+}
+
+#focus-overlay.focus-swap .focus-name,
+#focus-overlay.focus-swap .focus-blurb {
+  animation: focusIn 0.4s ease both;
+}
+
+@keyframes focusIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cosmic-stepper {
+  position: fixed;
+  bottom: 3.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: none;
+  gap: 0.75rem;
+  pointer-events: auto;
+}
+
+.cosmic-stepper__btn {
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--signal-faint);
+  background: transparent;
+  color: var(--signal);
+  font-family: var(--font-hud);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.cosmic-stepper__btn:focus-visible {
+  outline: 1px solid var(--signal);
+  outline-offset: 3px;
+}
+
+.cosmic-stepper__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+#nav-hint {
+  position: fixed;
+  bottom: 1.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  margin: 0;
+  font-family: var(--font-hud);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--signal-faint);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+  text-align: center;
+  max-width: min(92vw, 28rem);
+}
+
+#nav-hint[data-visible='true'] {
+  opacity: 1;
+}
+
+#nav-hint[data-visible='false'] {
+  opacity: 0;
+}
+
+#loading {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  background: var(--void);
+  font-family: var(--font-hud);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--signal-faint);
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+#loading[data-state='done'] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#loading[data-state='error'] {
+  opacity: 1;
+  visibility: visible;
+  color: var(--signal);
+}
+
+@media (hover: none), (max-width: 640px) {
+  .cosmic-stepper {
+    display: flex;
+  }
+
+  #nav-hint {
+    bottom: 1.1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  #hud {
+    padding: 1rem 1.15rem;
+  }
+
+  #focus-overlay {
+    top: 10%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #focus-overlay.focus-swap .focus-name,
+  #focus-overlay.focus-swap .focus-blurb {
+    animation: none;
+  }
+
+  #nav-hint,
+  #loading {
+    transition: none;
+  }
+}

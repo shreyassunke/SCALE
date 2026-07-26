@@ -1,4 +1,4 @@
-import type { LandingMenuTarget } from '../ui/Menu'
+import type { LandingMenuTarget } from '../ui/TrackRail'
 
 export type LandingVideo = LandingMenuTarget & {
   dispose: () => void
@@ -7,6 +7,7 @@ export type LandingVideo = LandingMenuTarget & {
 /**
  * Full-bleed cinematic hero — loops quietly behind SCALE UI.
  * Grayscale + veil keep strict mono harmony with DESIGN.md.
+ * Prefer a pre-graded B&W source when available; CSS filter is the fallback.
  */
 export function createLandingVideo(video: HTMLVideoElement): LandingVideo {
   video.muted = true
@@ -34,10 +35,7 @@ export function createLandingVideo(video: HTMLVideoElement): LandingVideo {
   let awaitingGesture = false
 
   const applyIdleLook = () => {
-    video.style.filter =
-      activeTrack === null
-        ? ''
-        : 'grayscale(1) brightness(1.06) contrast(1.05)'
+    video.classList.toggle('is-track-active', activeTrack !== null)
   }
 
   const armGestureResume = () => {

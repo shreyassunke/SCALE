@@ -11,11 +11,12 @@ npm run dev
 
 - `/` — SCALE landing / environment menu  
 - `/dimensions` — All 7 Dimensions scroll journey  
+- `/cosmic` — Cosmic Scale logarithmic zoom  
 
 ## Stack
 
 - Vite + TypeScript (vanilla, no React)
-- Three.js — landing event-display + dimensions scene
+- Three.js — cosmic scale + dimensions scenes
 - GSAP — entrance / handoff motion
 - Lenis + ScrollTrigger — dimensions journey only
 
@@ -24,8 +25,9 @@ npm run dev
 | Environment | Status |
 |-------------|--------|
 | 7 Dimensions | Live (`/dimensions`) |
-| Cosmic Scale | Coming soon |
+| Cosmic Scale | Live (`/cosmic`) |
 | Levels of Consciousness | Coming soon |
 | Levels of Civilizations | Coming soon |
 
+Cosmic assets and credits: `public/cosmic/SOURCES.md`.
 Design system: see `PRODUCT.md` and `DESIGN.md`.

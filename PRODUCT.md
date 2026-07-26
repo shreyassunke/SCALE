@@ -21,25 +21,27 @@ Not an encyclopedia or a dashboard of facts. A cinematic, quiet interface where 
 ## Operating Context
 
 - Web experience (Vite + TypeScript + Three.js).
-- Entry: landing/menu hub; environments are separate journeys (currently one live: All 7 Dimensions scroll experience at `/dimensions`).
+- Entry: landing/menu hub; environments are separate journeys.
+- Live routes: `/dimensions` (7 Dimensions), `/cosmic` (Cosmic Scale).
 - Future environments ship as additional routes; stubs appear as “coming soon” until built.
 
 ## Capabilities and Constraints
 
-- Live: 7 Dimensions (scroll-driven 0D→7D WebGL journey).
-- Menu stubs: Cosmic Scale, Levels of Consciousness, Levels of Civilizations.
+- Live: 7 Dimensions (scroll-driven 0D→7D WebGL journey); Cosmic Scale (log zoom through sourced scientific imagery at `/cosmic`).
+- Menu stubs: Levels of Consciousness, Levels of Civilizations.
 - Stack: Vite multi-page, vanilla TS, Three.js, GSAP, Lenis — no React.
-- Open: exact content and mechanics of stub environments.
+- Cosmic Scale content must use imported NASA / scientific assets — no invented procedural bodies.
 
 ## Brand Commitments
 
 - Product name: **SCALE**.
-- Aesthetic (binding): vast, quiet, cinematic, calm, minimalist, **strict black and white**. Signal over noise. Never bright neon or off-theme color that adds noise.
+- Aesthetic (binding): vast, quiet, cinematic, calm, minimalist. Hub and HUD chrome are **strict black and white**. Signal over noise. Never bright neon or off-theme chrome color that adds noise.
+- Environment exception: Cosmic Scale may show **photoreal chromatic scientific content** (focused object saturated; neighbors desaturate). Chrome remains monochrome.
 - Intent: feel like a visual simulation tool, not a marketing site.
 
 ## Evidence on Hand
 
-- Existing journey: All 7 Dimensions (`dimensions.html` / scene modules under `src/scene/`).
+- Existing journeys: All 7 Dimensions (`dimensions.html`); Cosmic Scale (`cosmic.html` / `src/cosmic/` + `public/cosmic/`).
 - Reference mood images (user-provided): void spaces, perspective grids, particle fields, silhouettes for scale — match feel, not content.
 
 ## Product Principles

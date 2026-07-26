@@ -1,0 +1,274 @@
+/**
+ * Cosmic Scale object ladder — only entries with local sourced assets.
+ * sizeMeters = characteristic length (approx diameter / span).
+ */
+
+export type CosmicAssetType = 'textureSphere' | 'imagePlane'
+
+export type CosmicObject = {
+  id: string
+  name: string
+  blurb: string
+  sizeMeters: number
+  type: CosmicAssetType
+  /** Path under /cosmic/ */
+  src: string
+  /** Optional ring texture (Saturn) */
+  ringSrc?: string
+  credit: string
+}
+
+export const cosmicCatalog: CosmicObject[] = [
+  {
+    id: 'dna',
+    name: 'DNA',
+    blurb: 'The double helix — roughly two nanometers across.',
+    sizeMeters: 2e-9,
+    type: 'imagePlane',
+    src: 'dna/dna.png',
+    credit: 'Wikimedia Commons — DNA structure diagram',
+  },
+  {
+    id: 'pollen',
+    name: 'Pollen Grain',
+    blurb: 'A microscopic traveler — tens of micrometers across.',
+    sizeMeters: 3e-5,
+    type: 'imagePlane',
+    src: 'pollen/pollen.jpg',
+    credit: 'Wikimedia Commons — pollen SEM',
+  },
+  {
+    id: 'everest',
+    name: 'Mount Everest',
+    blurb: 'Earth’s highest peak — nearly nine kilometers above sea level.',
+    sizeMeters: 8849,
+    type: 'imagePlane',
+    src: 'everest/everest.jpg',
+    credit: 'Wikimedia Commons — Mount Everest',
+  },
+  {
+    id: 'mars_curiosity',
+    name: 'Gale Crater',
+    blurb: 'Curiosity’s view across the Martian surface.',
+    sizeMeters: 1.54e5,
+    type: 'imagePlane',
+    src: 'mars_curiosity/curiosity.jpg',
+    credit: 'NASA / JPL-Caltech / MSSS',
+  },
+  {
+    id: 'pluto',
+    name: 'Pluto',
+    blurb: 'A heart-shaped ice world at the edge of the classical planets.',
+    sizeMeters: 2.377e6,
+    type: 'imagePlane',
+    src: 'pluto/pluto.jpg',
+    credit: 'NASA / Johns Hopkins APL / SwRI',
+  },
+  {
+    id: 'europa',
+    name: 'Europa',
+    blurb: 'An ice shell over a hidden ocean — moon of Jupiter.',
+    sizeMeters: 3.122e6,
+    type: 'imagePlane',
+    src: 'europa/europa.jpg',
+    credit: 'NASA / JPL',
+  },
+  {
+    id: 'moon',
+    name: 'Moon',
+    blurb: 'Earth’s companion — scarred by billions of years of impacts.',
+    sizeMeters: 3.474e6,
+    type: 'textureSphere',
+    src: 'moon/2k_moon.jpg',
+    credit: 'Solar System Scope (CC BY 4.0) — NASA-based',
+  },
+  {
+    id: 'io',
+    name: 'Io',
+    blurb: 'Jupiter’s volcanic moon — the most geologically active body known.',
+    sizeMeters: 3.643e6,
+    type: 'imagePlane',
+    src: 'io/io.jpg',
+    credit: 'NASA / JPL',
+  },
+  {
+    id: 'mercury',
+    name: 'Mercury',
+    blurb: 'The innermost planet — a cratered iron world.',
+    sizeMeters: 4.88e6,
+    type: 'textureSphere',
+    src: 'mercury/2k_mercury.jpg',
+    credit: 'Solar System Scope (CC BY 4.0) — NASA-based',
+  },
+  {
+    id: 'titan',
+    name: 'Titan',
+    blurb: 'Saturn’s haze-wrapped moon — lakes of liquid methane.',
+    sizeMeters: 5.15e6,
+    type: 'imagePlane',
+    src: 'titan/titan.jpg',
+    credit: 'NASA / JPL / Cassini',
+  },
+  {
+    id: 'mars',
+    name: 'Mars',
+    blurb: 'The red planet — deserts, volcanoes, and polar ice.',
+    sizeMeters: 6.779e6,
+    type: 'textureSphere',
+    src: 'mars/2k_mars.jpg',
+    credit: 'Solar System Scope (CC BY 4.0) — NASA-based',
+  },
+  {
+    id: 'venus',
+    name: 'Venus',
+    blurb: 'A hellish twin — surface mapped beneath the clouds.',
+    sizeMeters: 1.2104e7,
+    type: 'textureSphere',
+    src: 'venus/2k_venus_surface.jpg',
+    credit: 'Solar System Scope (CC BY 4.0) — NASA-based',
+  },
+  {
+    id: 'earth',
+    name: 'Earth',
+    blurb: 'Our planet mapped in true color — diameter ~12,742 km.',
+    sizeMeters: 1.2742e7,
+    type: 'textureSphere',
+    src: 'earth/2k_earth_daymap.jpg',
+    credit: 'Solar System Scope (CC BY 4.0) — NASA-based',
+  },
+  {
+    id: 'neptune',
+    name: 'Neptune',
+    blurb: 'The deep blue ice giant — farthest of the classical planets.',
+    sizeMeters: 4.9244e7,
+    type: 'textureSphere',
+    src: 'neptune/2k_neptune.jpg',
+    credit: 'Solar System Scope (CC BY 4.0) — NASA-based',
+  },
+  {
+    id: 'uranus',
+    name: 'Uranus',
+    blurb: 'An ice giant tipped on its side.',
+    sizeMeters: 5.0724e7,
+    type: 'textureSphere',
+    src: 'uranus/2k_uranus.jpg',
+    credit: 'Solar System Scope (CC BY 4.0) — NASA-based',
+  },
+  {
+    id: 'saturn',
+    name: 'Saturn',
+    blurb: 'Ringed giant — ice and dust in razor-thin planes.',
+    sizeMeters: 1.1646e8,
+    type: 'textureSphere',
+    src: 'saturn/2k_saturn.jpg',
+    ringSrc: 'saturn_ring/2k_saturn_ring_alpha.png',
+    credit: 'Solar System Scope (CC BY 4.0) — NASA-based',
+  },
+  {
+    id: 'jupiter',
+    name: 'Jupiter',
+    blurb: 'The giant — a storm-banded gas world.',
+    sizeMeters: 1.3982e8,
+    type: 'textureSphere',
+    src: 'jupiter/2k_jupiter.jpg',
+    credit: 'Solar System Scope (CC BY 4.0) — NASA-based',
+  },
+  {
+    id: 'sun',
+    name: 'Sun',
+    blurb: 'Our star — a million Earths would fit inside.',
+    sizeMeters: 1.3927e9,
+    type: 'textureSphere',
+    src: 'sun/sun.jpg',
+    credit: 'threex.planets sunmap (NASA-derived)',
+  },
+  {
+    id: 'solar_system',
+    name: 'Solar System',
+    blurb: 'From the Sun to the outer planets — our local neighborhood.',
+    sizeMeters: 9e12,
+    type: 'imagePlane',
+    src: 'solar_system/solar_system.jpg',
+    credit: 'NASA',
+  },
+  {
+    id: 'helix_nebula',
+    name: 'Helix Nebula',
+    blurb: 'A dying star’s breath — a planetary nebula a few light-years across.',
+    sizeMeters: 2.8e16,
+    type: 'imagePlane',
+    src: 'helix_nebula/helix.jpg',
+    credit: 'NASA / JPL-Caltech / ESA',
+  },
+  {
+    id: 'crab_nebula',
+    name: 'Crab Nebula',
+    blurb: 'Remnant of a supernova seen in 1054 — about eleven light-years wide.',
+    sizeMeters: 1e17,
+    type: 'imagePlane',
+    src: 'crab_nebula/crab.jpg',
+    credit: 'NASA / ESA / JPL',
+  },
+  {
+    id: 'eagle_nebula',
+    name: 'Eagle Nebula',
+    blurb: 'Star-forming towers of gas and dust.',
+    sizeMeters: 7e17,
+    type: 'imagePlane',
+    src: 'eagle_nebula/eagle.jpg',
+    credit: 'NASA',
+  },
+  {
+    id: 'carina',
+    name: 'Carina Nebula',
+    blurb: 'A stellar nursery larger than hundreds of light-years.',
+    sizeMeters: 2e18,
+    type: 'imagePlane',
+    src: 'carina/carina.jpg',
+    credit: 'NASA',
+  },
+  {
+    id: 'milky_way',
+    name: 'Milky Way',
+    blurb: 'Our galaxy — a barred spiral roughly 100,000 light-years across.',
+    sizeMeters: 9.5e20,
+    type: 'imagePlane',
+    src: 'milky_way/milky_way.jpg',
+    credit: 'NASA / JPL-Caltech',
+  },
+  {
+    id: 'andromeda',
+    name: 'Andromeda',
+    blurb: 'The nearest major galaxy — on a collision course with the Milky Way.',
+    sizeMeters: 2e21,
+    type: 'imagePlane',
+    src: 'andromeda/andromeda.jpg',
+    credit: 'NASA / JPL-Caltech',
+  },
+  {
+    id: 'local_universe',
+    name: 'Local Universe',
+    blurb: 'Galaxies in our cosmic neighborhood.',
+    sizeMeters: 1e23,
+    type: 'imagePlane',
+    src: 'local_universe/local.jpg',
+    credit: 'NASA',
+  },
+  {
+    id: 'observable_universe',
+    name: 'Observable Universe',
+    blurb: 'Everything light has had time to reach us — roughly 93 billion light-years across.',
+    sizeMeters: 8.8e26,
+    type: 'imagePlane',
+    src: 'observable_universe/universe.jpg',
+    credit: 'NASA / WMAP',
+  },
+]
+
+export function getSortedCatalog(): CosmicObject[] {
+  return [...cosmicCatalog].sort((a, b) => a.sizeMeters - b.sizeMeters)
+}
+
+export function logSize(meters: number): number {
+  return Math.log10(Math.max(meters, 1e-30))
+}

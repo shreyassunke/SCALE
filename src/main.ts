@@ -28,9 +28,7 @@ const clockStart = performance.now()
 
 const tick = () => {
   const time = (performance.now() - clockStart) / 1000
-  const state = scroll.getState()
-  scene.update(state, time)
-  overlay.update(state)
+  scene.update(scroll.getState(), time)
   raf = requestAnimationFrame(tick)
 }
 raf = requestAnimationFrame(tick)

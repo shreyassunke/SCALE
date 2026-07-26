@@ -1,7 +1,8 @@
 import './style.css'
 import gsap from 'gsap'
 import { createCoordinates } from './ui/Coordinates'
-import { createMenu } from './ui/Menu'
+import { createTrackRail } from './ui/TrackRail'
+import { createCommandPalette } from './ui/CommandPalette'
 import { createLandingVideo } from './video/LandingVideo'
 
 const video = document.querySelector<HTMLVideoElement>('#hero-video')
@@ -10,14 +11,22 @@ const brand = document.querySelector<HTMLElement>('.brand')
 const tagline = document.querySelector<HTMLElement>('.tagline')
 const coord = document.querySelector<HTMLElement>('#coord')
 const chrome = document.querySelectorAll('.chrome')
+const browseTrigger = document.querySelector<HTMLButtonElement>('#browse-trigger')
 
 if (!video || !nav || !coord) {
   throw new Error('Missing landing roots')
 }
 
 const bg = createLandingVideo(video)
-const menu = createMenu(nav, bg)
 const coordinates = createCoordinates(coord)
+
+const palette = createCommandPalette({
+  returnFocus: browseTrigger,
+})
+
+const rail = createTrackRail(nav, { scene: bg })
+
+browseTrigger?.addEventListener('click', () => palette.open())
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -38,7 +47,8 @@ if (!reduceMotion && entranceTargets.length) {
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     coordinates.destroy()
-    menu.destroy()
+    rail.destroy()
+    palette.destroy()
     bg.dispose()
   })
 }

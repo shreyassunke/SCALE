@@ -95,10 +95,12 @@ function sectionToDimension(section: SectionKey, progress: number): number {
  * Per-section 0–1 maps to a continuous `dimension` float (0→7).
  */
 export function createScrollEngine(): ScrollEngine {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
   const lenis = new Lenis({
-    duration: 1.15,
+    duration: reduceMotion ? 0 : 1.15,
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    smoothWheel: true,
+    smoothWheel: !reduceMotion,
   })
 
   lenis.on('scroll', ScrollTrigger.update)
@@ -153,7 +155,7 @@ export function createScrollEngine(): ScrollEngine {
       trigger: el,
       start: 'top top',
       end: 'bottom top',
-      scrub: 0.45,
+      scrub: reduceMotion ? true : 0.45,
       onToggle: (self) => {
         if (self.isActive) {
           activeSection = key

@@ -1,11 +1,11 @@
 :root {
-  --bg: #030508;
-  --text: #f2f7fc;
-  --text-muted: #c9d7e6;
-  --accent: #c5dff5;
-  --hud: #e8f1fa;
-  --font-display: 'Newsreader', 'Source Serif 4', Georgia, serif;
-  --font-ui: 'Syne', system-ui, sans-serif;
+  --void: #000000;
+  --signal: #ffffff;
+  --signal-dim: #9a9a9a;
+  /* ≥4.5:1 on void for normal HUD / body secondary */
+  --signal-faint: #767676;
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-hud: 'Azeret Mono', ui-monospace, monospace;
 }
 
 *,
@@ -18,9 +18,9 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-ui);
+  background: var(--void);
+  color: var(--signal);
+  font-family: var(--font-display);
   overflow-x: hidden;
 }
 
@@ -65,28 +65,32 @@ html.lenis body {
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    rgba(3, 5, 8, 0.72) 0%,
-    rgba(3, 5, 8, 0.28) 55%,
+    rgba(0, 0, 0, 0.72) 0%,
+    rgba(0, 0, 0, 0.28) 55%,
     transparent 100%
   );
 }
 
 .brand {
   margin: 0;
-  font-family: var(--font-ui);
+  font-family: var(--font-hud);
   font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--hud);
-  text-shadow: 0 1px 12px rgba(3, 5, 8, 0.9);
+  color: var(--signal);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
 }
 
 .brand-link {
   pointer-events: auto;
   text-decoration: none;
-  color: var(--hud);
+  color: var(--signal);
   transition: opacity 0.2s ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0;
 }
 
 .brand-link:hover,
@@ -95,32 +99,34 @@ html.lenis body {
 }
 
 .brand-link:focus-visible {
-  outline: 1px solid var(--hud);
+  outline: 1px solid var(--signal);
   outline-offset: 4px;
 }
 
 .journey-name {
   margin: 0;
   flex: 1;
-  font-family: var(--font-ui);
+  font-family: var(--font-hud);
   font-size: 0.68rem;
   font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(232, 241, 250, 0.55);
-  text-shadow: 0 1px 12px rgba(3, 5, 8, 0.9);
+  color: var(--signal-faint);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
 }
 
 .dim-label {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-style: italic;
-  font-weight: 500;
-  color: var(--accent);
+  font-family: var(--font-hud);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--signal-dim);
   min-width: 2.5rem;
   text-align: right;
-  text-shadow: 0 1px 12px rgba(3, 5, 8, 0.9);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
 }
 
 .progress-track {
@@ -129,13 +135,13 @@ html.lenis body {
   right: 1.75rem;
   bottom: 0;
   height: 1px;
-  background: rgba(184, 212, 240, 0.22);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .progress-fill {
   height: 100%;
   width: 100%;
-  background: var(--accent);
+  background: var(--signal);
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 0.05s linear;
@@ -175,8 +181,8 @@ html.lenis body {
     clamp(2.5rem, 8vh, 5rem);
   background: linear-gradient(
     to top right,
-    rgba(3, 5, 8, 0.82) 0%,
-    rgba(3, 5, 8, 0.45) 32%,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.45) 32%,
     transparent 58%
   );
 }
@@ -188,7 +194,7 @@ html.lenis body {
   visibility: visible;
   transform: translateY(0);
   transition: transform 0.35s ease-out;
-  text-shadow: 0 1px 18px rgba(3, 5, 8, 0.85);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.85);
 }
 
 .copy-beat.active {
@@ -197,40 +203,42 @@ html.lenis body {
 
 .copy-beat .tag {
   margin: 0 0 0.45rem;
-  font-family: var(--font-ui);
+  font-family: var(--font-hud);
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #e8c49a;
+  color: var(--signal-dim);
 }
 
 .copy-beat h2 {
   margin: 0 0 0.65rem;
   font-family: var(--font-display);
   font-size: clamp(1.75rem, 4vw, 2.45rem);
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.02em;
-  color: var(--text);
+  color: var(--signal);
 }
 
 .copy-beat p {
   margin: 0;
-  font-family: var(--font-ui);
+  font-family: var(--font-display);
   font-size: clamp(0.95rem, 1.6vw, 1.1rem);
   font-weight: 400;
   line-height: 1.55;
-  color: var(--text-muted);
+  color: var(--signal-dim);
   max-width: 28ch;
 }
 
 .copy-beat .aside {
   margin-top: 0.85rem;
-  font-size: 0.82rem;
-  letter-spacing: 0.02em;
-  font-style: italic;
-  color: var(--accent);
+  font-family: var(--font-hud);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  font-style: normal;
+  text-transform: uppercase;
+  color: var(--signal-faint);
   opacity: 1;
 }
 
@@ -265,5 +273,15 @@ html.lenis body {
 
   .section-spacer {
     height: 260vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-beat {
+    transition: none;
+  }
+
+  .progress-fill {
+    transition: none;
   }
 }

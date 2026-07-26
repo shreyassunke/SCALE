@@ -10,6 +10,7 @@ export default defineConfig({
       input: {
         main: resolve(root, 'index.html'),
         dimensions: resolve(root, 'dimensions.html'),
+        cosmic: resolve(root, 'cosmic.html'),
       },
     },
   },
@@ -20,6 +21,9 @@ export default defineConfig({
         server.middlewares.use((req, _res, next) => {
           if (req.url === '/dimensions' || req.url === '/dimensions/') {
             req.url = '/dimensions.html'
+          }
+          if (req.url === '/cosmic' || req.url === '/cosmic/') {
+            req.url = '/cosmic.html'
           }
           next()
         })

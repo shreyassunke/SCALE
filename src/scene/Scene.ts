@@ -47,8 +47,8 @@ const CAMERA_PATH: CamKeyframe[] = [
   { at: 7.35, position: new Vector3(0, 0, 4.2), lookAt: new Vector3(0, 0, 0) },
 ]
 
-const BG_BASE = new Color('#030508')
-const BG_DEEP = new Color('#010308')
+const BG_BASE = new Color('#000000')
+const BG_DEEP = new Color('#000000')
 const _bg = new Color()
 
 const _camPos = new Vector3()
@@ -108,7 +108,7 @@ export function createScene(canvas: HTMLCanvasElement, perf: PerfSettings): Dime
   const scene = new Scene()
   scene.background = BG_BASE.clone()
   // Soft depth fog — stronger past 3D so overlapping dims separate cleanly
-  scene.fog = new Fog('#030508', 8, 22)
+  scene.fog = new Fog('#000000', 8, 22)
 
   const camera = new PerspectiveCamera(45, 1, 0.1, 100)
   camera.position.set(0, 0, 3.2)

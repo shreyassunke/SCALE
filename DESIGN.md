@@ -10,7 +10,7 @@ colors:
   void: "#000000"
   signal: "#ffffff"
   signal-dim: "#9a9a9a"
-  signal-faint: "#6e6e6e"
+  signal-faint: "#767676"
   ring: "#c8c8c8"
   focus: "#ffffff"
 typography:
@@ -59,12 +59,15 @@ SCALE’s visual world is a **monochrome cinematic void**: near-black vacuum, a 
 
 ## Colors
 
-Strict black/white only. `void` is absolute black. `signal` is primary type and live affordances. `signal-dim` / `signal-faint` mark coming-soon and inactive scene cues. No hue, no neon, no colored glow.
+Strict black/white for hub, chrome, and HUD. `void` is absolute black. `signal` is primary type and live affordances. `signal-dim` / `signal-faint` mark coming-soon and inactive scene cues. No hue, no neon, no colored glow on UI.
+
+**Cosmic Scale exception:** journey *content* (planets, imagery) may be full photoreal color when focused; unfocused neighbors desaturate toward the void. Overlay typography and chrome stay monochrome.
 
 ## Typography
 
-- **Display:** Bricolage Grotesque — brand word SCALE and short supporting line.
-- **HUD:** Azeret Mono — environment labels, status, coordinates. Tracked uppercase for system chrome only; one kicker max.
+- **Display:** Bricolage Grotesque — brand word SCALE, journey titles, and short supporting lines.
+- **HUD:** Azeret Mono — environment labels, status, coordinates, journey chrome. Tracked uppercase for system chrome only; one kicker max.
+- Shared across hub, Cosmic Scale, and 7 Dimensions chrome (scene content may differ).
 
 ## Layout
 
@@ -88,4 +91,11 @@ Full-bleed film plane; no rounded cards. Focus rings are 1px white outlines with
 
 **Do** keep absolute black grounds and white signal. **Do** let SCALE dominate the first viewport. **Do** treat the menu as instrument chrome.
 
-**Don't** introduce saturated color, purple/neon glows, glassmorphism as decoration, or equal-weight feature cards. **Don't** bury the brand in a small nav word.
+**Don't** introduce saturated color on hub/chrome, purple/neon glows, glassmorphism as decoration, or equal-weight feature cards. **Don't** bury the brand in a small nav word. **Don't** invent procedural planet/galaxy looks — Cosmic Scale uses sourced scientific assets only.
+
+## Cosmic Scale surface
+
+- Full-viewport WebGL void; logarithmic zoom (arrow keys + wheel).
+- Focus overlay: large object name + quiet one-line blurb (neal.fun quietude).
+- Back link: thin SCALE → `/`.
+- Assets: NASA / Solar System Scope (CC-BY) / licensed scientific imagery via local `public/cosmic/` manifest.

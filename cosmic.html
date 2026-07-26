@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='6' fill='none' stroke='%23fff' stroke-width='4'/><circle cx='50' cy='50' r='2' fill='%23fff'/></svg>"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Cosmic Scale — logarithmic zoom from the microscopic to the observable universe. Part of SCALE."
+    />
+    <title>Cosmic Scale — SCALE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!--
+      THESIS: Side-by-side cosmic comparison on a black mirror shelf — perspective through relative size.
+      OWN-WORLD: Pure black void; photoreal spheres/disks; mirror reflections; bold white focus name.
+      STORY: Arrow through the ladder; focused body centered; neighbors show true-relative scale.
+      FIRST VIEWPORT: Earth centered; name above; SCALE wordmark top-left; shelf of worlds.
+      FORM: neal.fun size-of-space grammar inside SCALE chrome.
+    -->
+    <canvas id="webgl" aria-hidden="true"></canvas>
+    <div class="grain" aria-hidden="true"></div>
+
+    <div id="loading" data-state="loading">Loading cosmic scale</div>
+
+    <div id="hud">
+      <a class="brand-link" href="/">SCALE</a>
+      <p class="journey-name">Cosmic Scale</p>
+    </div>
+
+    <div id="focus-overlay"></div>
+
+    <div class="cosmic-stepper" id="cosmic-stepper" data-no-swipe>
+      <button type="button" class="cosmic-stepper__btn" id="step-prev" aria-label="Previous object">
+        ←
+      </button>
+      <button type="button" class="cosmic-stepper__btn" id="step-next" aria-label="Next object">
+        →
+      </button>
+    </div>
+
+    <p id="nav-hint">Swipe or ← → · scroll to step</p>
+
+    <script type="module" src="/src/cosmic/main.ts"></script>
+  </body>
+</html>
