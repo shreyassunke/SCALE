@@ -1,163 +1,89 @@
 import {
-  AdditiveBlending,
-  BufferAttribute,
-  BufferGeometry,
   Color,
   Group,
-  LineSegments,
-  LineBasicMaterial,
   MathUtils,
-  Points,
-  PointsMaterial,
-  Sprite,
-  SpriteMaterial,
-  CanvasTexture,
+  Mesh,
+  MeshStandardMaterial,
+  BoxGeometry,
 } from 'three'
 import type { DimensionModule, DimensionContext } from './types'
 import type { PerfSettings } from '../../utils/perf'
+import { Cinema } from '../cinematic/palette'
+import {
+  createContinuityHero,
+  type ContinuityHero,
+  type PickupOutcome,
+} from './continuityHero'
 
-type Branch = { x: number; y: number; z: number; depth: number; side: number }
-
-function makeGlow(): CanvasTexture {
-  const size = 48
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const ctx = canvas.getContext('2d')!
-  const g = ctx.createRadialGradient(24, 24, 0, 24, 24, 24)
-  g.addColorStop(0, 'rgba(255,255,255,1)')
-  g.addColorStop(0.4, 'rgba(180,220,255,0.5)')
-  g.addColorStop(1, 'rgba(0,0,0,0)')
-  ctx.fillStyle = g
-  ctx.fillRect(0, 0, size, size)
-  return new CanvasTexture(canvas)
-}
+const OUTCOMES: PickupOutcome[] = ['lift', 'leave', 'drop', 'never']
 
 /**
- * 5D metaphor: Everett-style branching — one temporal worm becomes a fractal tree of outcomes.
+ * 5D — alternate takes: editor sprouts multiple timeline tracks of the same pickup.
  */
 export function createBranching5D(perf: PerfSettings): DimensionModule {
   const group = new Group()
   group.name = 'Branching5D'
 
   let mounted = false
-  let lines: LineSegments | null = null
-  let tips: Points | null = null
-  let forkMarker: Sprite | null = null
-  let tex: CanvasTexture | null = null
-  let maxDepth = 4
-  let segCount = 0
-  let tipCount = 0
-  /** Per-segment depth for progressive reveal (one value per endpoint pair → use start depth) */
-  let segDepths: number[] = []
+  let stage: Group | null = null
+  let tracks: Group | null = null
+  let takes: { hero: ContinuityHero; rail: Mesh; outcome: PickupOutcome }[] = []
+  let preview: ContinuityHero | null = null
 
   const mount = () => {
     if (mounted) return
-    tex = makeGlow()
 
-    maxDepth = perf.tier === 'high' ? 6 : 4
-    const branches: Branch[] = [{ x: 0, y: -2.2, z: 0, depth: 0, side: 0 }]
-    const segs: number[] = []
-    const segCols: number[] = []
-    const tipPos: number[] = []
-    const tipCols: number[] = []
-    segDepths = []
+    stage = new Group()
+    tracks = new Group()
+    tracks.position.set(0, -0.55, 0)
 
-    const original = new Color('#7ec8ff')
-    const divergent = new Color('#ff8a9a')
-    const trunk = new Color('#9fd0ff')
-    const tmp = new Color()
+    preview = createContinuityHero(perf)
+    preview.root.scale.setScalar(0.65)
+    preview.root.position.set(0, 0.35, 0.2)
+    preview.setOutcome('lift', 1)
+    preview.setOpacity(0)
 
-    const grow = (b: Branch) => {
-      if (b.depth >= maxDepth) {
-        tipPos.push(b.x, b.y, b.z)
-        tmp.copy(original).lerp(divergent, Math.abs(b.side))
-        tipCols.push(tmp.r, tmp.g, tmp.b)
-        return
-      }
-      const splits = 2
-      for (let i = 0; i < splits; i++) {
-        const spread = 0.5 + b.depth * 0.14
-        const angle = (i / splits) * Math.PI - Math.PI / 2 + (i - 0.5) * 0.75
-        const len = 0.88 - b.depth * 0.09
-        const nx = b.x + Math.sin(angle) * spread * len
-        const ny = b.y + len * 0.95
-        const nz = b.z + Math.cos(angle * 1.3) * spread * 0.55 * len
-        const side = b.depth === 0 ? (i === 0 ? -1 : 1) : b.side
+    takes = []
+    const n = Math.min(OUTCOMES.length, perf.tier === 'high' ? 4 : 3)
+    for (let i = 0; i < n; i++) {
+      const outcome = OUTCOMES[i]
+      const y = -i * 0.42
+      const rail = new Mesh(
+        new BoxGeometry(3.0, 0.07, 0.03),
+        new MeshStandardMaterial({
+          color: new Color(i === 0 ? Cinema.signal : Cinema.signalDim),
+          roughness: 0.55,
+          metalness: 0.2,
+          transparent: true,
+          opacity: 0,
+        }),
+      )
+      rail.position.set(0, y, -0.25)
 
-        segs.push(b.x, b.y, b.z, nx, ny, nz)
-        segDepths.push(b.depth)
+      const hero = createContinuityHero(perf)
+      hero.root.scale.setScalar(0.28)
+      hero.root.position.set(-0.2 + i * 0.15, y + 0.05, 0.1)
+      hero.setOutcome(outcome, 1)
+      hero.setOpacity(0)
 
-        // Trunk cyan → tips pink (divergent destinies)
-        const mix = b.depth / maxDepth
-        tmp.copy(trunk).lerp(side < 0 ? original : divergent, mix * 0.85)
-        segCols.push(tmp.r, tmp.g, tmp.b, tmp.r, tmp.g, tmp.b)
-
-        grow({ x: nx, y: ny, z: nz, depth: b.depth + 1, side })
-      }
+      tracks.add(rail, hero.root)
+      takes.push({ hero, rail, outcome })
     }
-    grow(branches[0])
-    segCount = segDepths.length
-    tipCount = tipPos.length / 3
 
-    const lineGeo = new BufferGeometry()
-    lineGeo.setAttribute('position', new BufferAttribute(new Float32Array(segs), 3))
-    lineGeo.setAttribute('color', new BufferAttribute(new Float32Array(segCols), 3))
-    lines = new LineSegments(
-      lineGeo,
-      new LineBasicMaterial({
-        transparent: true,
-        opacity: 0,
-        blending: AdditiveBlending,
-        depthWrite: false,
-        vertexColors: true,
-      }),
-    )
-
-    const tipGeo = new BufferGeometry()
-    tipGeo.setAttribute('position', new BufferAttribute(new Float32Array(tipPos), 3))
-    tipGeo.setAttribute('color', new BufferAttribute(new Float32Array(tipCols), 3))
-    tips = new Points(
-      tipGeo,
-      new PointsMaterial({
-        size: 0.055,
-        transparent: true,
-        opacity: 0,
-        blending: AdditiveBlending,
-        depthWrite: false,
-        sizeAttenuation: true,
-        vertexColors: true,
-      }),
-    )
-
-    // First major fork pulse marker
-    forkMarker = new Sprite(
-      new SpriteMaterial({
-        map: tex,
-        color: new Color('#cfe8ff'),
-        transparent: true,
-        opacity: 0,
-        blending: AdditiveBlending,
-        depthWrite: false,
-      }),
-    )
-    forkMarker.position.set(0, -1.35, 0)
-    forkMarker.scale.setScalar(0.35)
-
-    group.add(lines, tips, forkMarker)
+    stage.add(preview.root, tracks)
+    group.add(stage)
     mounted = true
   }
 
   const update = (ctx: DimensionContext) => {
-    if (!mounted || !lines || !tips || !forkMarker) return
+    if (!mounted || !stage || !tracks || !preview) return
 
     const d = ctx.dimension
     let presence = 0
     let grow = 0
-    // Wait for 5D enter-morph — do not branch during late 4D commentary
-    if (d < 4.62) presence = 0
+    if (d < 4.55) presence = 0
     else if (d < 5) {
-      grow = (d - 4.62) / 0.38
+      grow = (d - 4.55) / 0.45
       presence = grow
     } else if (d < 5.7) {
       presence = 1
@@ -168,47 +94,43 @@ export function createBranching5D(perf: PerfSettings): DimensionModule {
     }
 
     const p = presence * presence * (3 - 2 * presence)
+    const reveal = Math.floor(grow * takes.length + 0.001)
 
-    // Progressive depth reveal: trunk first, then canopy
-    const revealDepth = grow * maxDepth
-    let visibleSegs = 0
-    for (let i = 0; i < segCount; i++) {
-      if (segDepths[i] <= revealDepth) visibleSegs++
+    // Active take follows section progress
+    const active = Math.min(
+      takes.length - 1,
+      Math.floor(MathUtils.clamp(ctx.sectionProgress, 0, 0.999) * takes.length),
+    )
+    preview.setOutcome(takes[active]?.outcome ?? 'lift', 1, ctx.time, 0.5)
+    preview.setOpacity(p)
+
+    for (let i = 0; i < takes.length; i++) {
+      const { hero, rail, outcome } = takes[i]
+      const vis = i < reveal ? 1 : MathUtils.clamp((grow * takes.length - i) * 2, 0, 1)
+      const focus = i === active ? 1 : 0.4
+      hero.setOutcome(outcome, 1, ctx.time * 0.85, i * 1.2)
+      hero.setOpacity(p * vis * focus)
+      ;(rail.material as MeshStandardMaterial).opacity = p * vis * (0.35 + focus * 0.45)
+      hero.root.position.x = MathUtils.lerp(-0.9, 0.9, (i + 0.5) / takes.length)
     }
-    lines.geometry.setDrawRange(0, Math.max(0, visibleSegs * 2))
 
-    // Tips appear after most branches are out
-    const tipReveal = MathUtils.clamp((grow - 0.45) / 0.55, 0, 1)
-    tips.geometry.setDrawRange(0, Math.floor(tipCount * tipReveal))
-
-    group.scale.setScalar(0.2 + grow * 0.8)
-    ;(lines.material as LineBasicMaterial).opacity = p * 0.75
-    ;(tips.material as PointsMaterial).opacity = p * tipReveal * 0.9
-    ;(tips.material as PointsMaterial).size = 0.05 + Math.sin(ctx.time * 1.8) * 0.008
-
-    // Pulse on the major choice fork
-    const forkPulse = 0.7 + Math.sin(ctx.time * 3.2) * 0.3
-    forkMarker.material.opacity = p * Math.min(1, grow * 2.2) * 0.55 * forkPulse
-    forkMarker.scale.setScalar(0.28 + forkPulse * 0.12)
-
-    group.rotation.y = ctx.time * 0.07 * p
-    group.rotation.z = Math.sin(ctx.time * 0.15) * 0.04 * p
+    stage.position.y = MathUtils.lerp(0.4, 0, p)
+    group.rotation.y = p * Math.sin(ctx.time * 0.07) * 0.05
   }
 
   const dispose = () => {
     if (!mounted) return
+    preview?.dispose()
+    for (const t of takes) {
+      t.hero.dispose()
+      t.rail.geometry.dispose()
+      ;(t.rail.material as MeshStandardMaterial).dispose()
+    }
+    takes = []
+    preview = null
     group.clear()
-    lines?.geometry.dispose()
-    ;(lines?.material as LineBasicMaterial | undefined)?.dispose()
-    tips?.geometry.dispose()
-    ;(tips?.material as PointsMaterial | undefined)?.dispose()
-    forkMarker?.material.dispose()
-    tex?.dispose()
-    lines = null
-    tips = null
-    forkMarker = null
-    tex = null
-    segDepths = []
+    stage = null
+    tracks = null
     mounted = false
   }
 

@@ -1,5 +1,5 @@
 import type { ScaleState } from '../scale/logScaleEngine'
-import { formatLength } from '../scale/logScaleEngine'
+import { formatScaleMetric } from '../scale/logScaleEngine'
 
 export type FocusOverlay = {
   update: (state: ScaleState) => void
@@ -16,21 +16,22 @@ export function createFocusOverlay(root: HTMLElement): FocusOverlay {
   nameEl.className = 'focus-name'
   const blurbEl = document.createElement('p')
   blurbEl.className = 'focus-blurb'
-  const scaleEl = document.createElement('p')
-  scaleEl.className = 'focus-scale'
-  scaleEl.setAttribute('aria-hidden', 'true')
 
-  root.append(nameEl, blurbEl, scaleEl)
+  root.append(nameEl, blurbEl)
 
   let lastId = ''
 
   return {
     update: (state) => {
-      const { focus, progress, sizeMeters } = state
+      const { focus, sizeMeters } = state
       if (focus.id !== lastId) {
         lastId = focus.id
         nameEl.textContent = focus.name
-        blurbEl.textContent = focus.blurb
+        const metric = formatScaleMetric(
+          sizeMeters,
+          focus.metricKind ?? (focus.type === 'textureSphere' ? 'diameter' : 'span'),
+        )
+        blurbEl.textContent = `${focus.blurb} ${metric}.`
         root.dataset.id = focus.id
         if (!reduceMotion) {
           root.classList.remove('focus-swap')
@@ -38,7 +39,6 @@ export function createFocusOverlay(root: HTMLElement): FocusOverlay {
           root.classList.add('focus-swap')
         }
       }
-      scaleEl.textContent = `${formatLength(sizeMeters)}  ·  ${Math.round(progress * 100)}%`
     },
     destroy: () => {
       root.innerHTML = ''

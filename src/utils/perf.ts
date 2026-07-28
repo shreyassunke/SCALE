@@ -6,6 +6,10 @@ export type PerfSettings = {
   dustCount: number
   pixelRatio: number
   enableSoftGlow: boolean
+  /** EffectComposer + bloom (high tier only) */
+  enablePost: boolean
+  bloomStrength: number
+  maxAnisotropy: number
 }
 
 function isMobileUserAgent(): boolean {
@@ -14,7 +18,7 @@ function isMobileUserAgent(): boolean {
 
 /**
  * Lightweight load-time fidelity check — no WebGL benchmarks required.
- * Caps DPR at 2; dials particles down on mobile / low cores / low memory.
+ * Caps DPR at 2; dials particles / post down on mobile / low cores / low memory.
  */
 export function detectPerf(): PerfSettings {
   const cores = navigator.hardwareConcurrency ?? 4
@@ -30,11 +34,13 @@ export function detectPerf(): PerfSettings {
   if (low) {
     return {
       tier: 'low',
-      // Slightly higher floor — post-3D worms/trees need enough samples to read
       particleCount: 100,
       dustCount: 120,
       pixelRatio: Math.min(dpr, 1.5),
       enableSoftGlow: false,
+      enablePost: false,
+      bloomStrength: 0,
+      maxAnisotropy: 4,
     }
   }
 
@@ -44,5 +50,8 @@ export function detectPerf(): PerfSettings {
     dustCount: 400,
     pixelRatio: dpr,
     enableSoftGlow: true,
+    enablePost: true,
+    bloomStrength: 0.28,
+    maxAnisotropy: 8,
   }
 }

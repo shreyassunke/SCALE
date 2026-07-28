@@ -63,6 +63,8 @@ Strict black/white for hub, chrome, and HUD. `void` is absolute black. `signal` 
 
 **Cosmic Scale exception:** journey *content* (planets, imagery) may be full photoreal color when focused; unfocused neighbors desaturate toward the void. Overlay typography and chrome stay monochrome.
 
+**7 Dimensions exception:** journey *content* may use restrained chromatic cinematic materials (PBR + HDRI reflections, warm key / cool fill, soft amber events). Never neon cyan/pink additive Line+Points kits. Overlay typography and chrome stay monochrome.
+
 ## Typography
 
 - **Display:** Bricolage Grotesque — brand word SCALE, journey titles, and short supporting lines.
@@ -95,7 +97,17 @@ Full-bleed film plane; no rounded cards. Focus rings are 1px white outlines with
 
 ## Cosmic Scale surface
 
-- Full-viewport WebGL void; logarithmic zoom (arrow keys + wheel).
-- Focus overlay: large object name + quiet one-line blurb (neal.fun quietude).
+- Canon: [neal.fun/size-of-space](https://neal.fun/size-of-space/) grammar inside SCALE chrome.
+- Full-viewport WebGL void; black mirror floor + hairline horizon (no grid).
+- True relative sizes; focused body fills the frame; priors shrink left; next body hidden until zoom-out step.
+- Focus overlay: large object name + one-line blurb with live metric from `sizeMeters` (diameter for spheres, span otherwise), top center.
 - Back link: thin SCALE → `/`.
 - Assets: NASA / Solar System Scope (CC-BY) / licensed scientific imagery via local `public/cosmic/` manifest.
+
+## 7 Dimensions surface
+
+- Full-viewport scroll-driven WebGL journey (0D→7D); Lenis + section holds so the next dim never appears under current copy.
+- Shared cinematic foundation: Poly Haven HDRI (reflections), ACES tone mapping, subtle bloom (high perf), quiet CSS film grain.
+- **Continuity spine (3D→7D):** Poly Haven cardboard box + man grasp. 4D = video-editor timeline scrub; 5D = alternate takes; 6D = warped physics on the same scene; 7D = catalog. Hero content from Tier A/D under `public/dimensions/` (see `public/dimensions/SOURCES.md`); procedural geometry is path/transition glue only.
+- Overlay: large title + body + aside; HUD chrome monochrome (SCALE / 7 Dimensions / dim label / progress).
+- Back link: thin SCALE → `/`.

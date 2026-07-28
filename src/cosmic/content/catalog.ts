@@ -11,6 +11,8 @@ export type CosmicObject = {
   blurb: string
   sizeMeters: number
   type: CosmicAssetType
+  /** How sizeMeters is labeled in the focus caption */
+  metricKind?: 'diameter' | 'height' | 'span'
   /** Path under /cosmic/ */
   src: string
   /** Optional ring texture (Saturn) */
@@ -22,7 +24,7 @@ export const cosmicCatalog: CosmicObject[] = [
   {
     id: 'dna',
     name: 'DNA',
-    blurb: 'The double helix — roughly two nanometers across.',
+    blurb: 'The double helix of life',
     sizeMeters: 2e-9,
     type: 'imagePlane',
     src: 'dna/dna.png',
@@ -31,18 +33,89 @@ export const cosmicCatalog: CosmicObject[] = [
   {
     id: 'pollen',
     name: 'Pollen Grain',
-    blurb: 'A microscopic traveler — tens of micrometers across.',
+    blurb: 'A microscopic traveler',
     sizeMeters: 3e-5,
     type: 'imagePlane',
     src: 'pollen/pollen.jpg',
     credit: 'Wikimedia Commons — pollen SEM',
   },
   {
+    id: 'sand',
+    name: 'Grain of Sand',
+    blurb: 'A speck of river sediment',
+    sizeMeters: 5e-4,
+    type: 'imagePlane',
+    metricKind: 'span',
+    src: 'sand/sand.jpg',
+    credit: 'Wikimedia Commons — sand grains',
+  },
+  {
+    id: 'ant',
+    name: 'Ant',
+    blurb: 'A small colony worker',
+    sizeMeters: 5e-3,
+    type: 'imagePlane',
+    metricKind: 'span',
+    src: 'ant/ant.jpg',
+    credit: 'Wikimedia Commons — meat ant',
+  },
+  {
+    id: 'human',
+    name: 'Human',
+    blurb: 'Average adult height',
+    sizeMeters: 1.7,
+    type: 'imagePlane',
+    metricKind: 'height',
+    src: 'human/human.jpg',
+    credit: 'Renderpeople Free — scanned human preview',
+  },
+  {
+    id: 'elephant',
+    name: 'Elephant',
+    blurb: 'An African bush elephant at the shoulder',
+    sizeMeters: 4,
+    type: 'imagePlane',
+    metricKind: 'height',
+    src: 'elephant/elephant.jpg',
+    credit: 'Wikimedia Commons — Loxodonta africana',
+  },
+  {
+    id: 'house',
+    name: 'House',
+    blurb: 'A two-story home',
+    sizeMeters: 10,
+    type: 'imagePlane',
+    metricKind: 'height',
+    src: 'house/house.jpg',
+    credit: 'HABS / Library of Congress — public domain',
+  },
+  {
+    id: 'tree',
+    name: 'Giant Sequoia',
+    blurb: 'Among the tallest living trees',
+    sizeMeters: 83,
+    type: 'imagePlane',
+    metricKind: 'height',
+    src: 'tree/tree.jpg',
+    credit: 'Wikimedia Commons — Sequoiadendron giganteum',
+  },
+  {
+    id: 'skyscraper',
+    name: 'Empire State Building',
+    blurb: 'A New York tower to the tip',
+    sizeMeters: 443,
+    type: 'imagePlane',
+    metricKind: 'height',
+    src: 'skyscraper/skyscraper.jpg',
+    credit: 'Wikimedia Commons — Empire State Building',
+  },
+  {
     id: 'everest',
     name: 'Mount Everest',
-    blurb: 'Earth’s highest peak — nearly nine kilometers above sea level.',
+    blurb: 'Earth’s highest peak above sea level',
     sizeMeters: 8849,
     type: 'imagePlane',
+    metricKind: 'height',
     src: 'everest/everest.jpg',
     credit: 'Wikimedia Commons — Mount Everest',
   },
@@ -130,7 +203,7 @@ export const cosmicCatalog: CosmicObject[] = [
   {
     id: 'earth',
     name: 'Earth',
-    blurb: 'Our planet mapped in true color — diameter ~12,742 km.',
+    blurb: 'Our planet mapped in true color',
     sizeMeters: 1.2742e7,
     type: 'textureSphere',
     src: 'earth/2k_earth_daymap.jpg',
@@ -194,7 +267,7 @@ export const cosmicCatalog: CosmicObject[] = [
   {
     id: 'helix_nebula',
     name: 'Helix Nebula',
-    blurb: 'A dying star’s breath — a planetary nebula a few light-years across.',
+    blurb: 'A dying star’s breath — a planetary nebula',
     sizeMeters: 2.8e16,
     type: 'imagePlane',
     src: 'helix_nebula/helix.jpg',
@@ -203,7 +276,7 @@ export const cosmicCatalog: CosmicObject[] = [
   {
     id: 'crab_nebula',
     name: 'Crab Nebula',
-    blurb: 'Remnant of a supernova seen in 1054 — about eleven light-years wide.',
+    blurb: 'Remnant of a supernova seen in 1054',
     sizeMeters: 1e17,
     type: 'imagePlane',
     src: 'crab_nebula/crab.jpg',
@@ -221,7 +294,7 @@ export const cosmicCatalog: CosmicObject[] = [
   {
     id: 'carina',
     name: 'Carina Nebula',
-    blurb: 'A stellar nursery larger than hundreds of light-years.',
+    blurb: 'A stellar nursery of gas and dust',
     sizeMeters: 2e18,
     type: 'imagePlane',
     src: 'carina/carina.jpg',
@@ -230,7 +303,7 @@ export const cosmicCatalog: CosmicObject[] = [
   {
     id: 'milky_way',
     name: 'Milky Way',
-    blurb: 'Our galaxy — a barred spiral roughly 100,000 light-years across.',
+    blurb: 'Our galaxy — a barred spiral',
     sizeMeters: 9.5e20,
     type: 'imagePlane',
     src: 'milky_way/milky_way.jpg',
@@ -257,7 +330,7 @@ export const cosmicCatalog: CosmicObject[] = [
   {
     id: 'observable_universe',
     name: 'Observable Universe',
-    blurb: 'Everything light has had time to reach us — roughly 93 billion light-years across.',
+    blurb: 'Everything light has had time to reach us',
     sizeMeters: 8.8e26,
     type: 'imagePlane',
     src: 'observable_universe/universe.jpg',

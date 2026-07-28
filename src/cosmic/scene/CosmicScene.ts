@@ -1,19 +1,23 @@
+/**
+ * Cosmic Scale scene — canon: neal.fun /size-of-space/
+ *
+ * Neal pan model: camera X hard-locks to the focus every frame (zero lag).
+ * Smoothness comes from continuous `scale`, never from camera easing.
+ * Easing the camera toward a moving layout target is what caused the shake.
+ */
 import {
   AmbientLight,
-  CanvasTexture,
   CircleGeometry,
   Color,
   DirectionalLight,
   DoubleSide,
   Group,
-  LinearFilter,
   MathUtils,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
   PerspectiveCamera,
   PlaneGeometry,
-  RepeatWrapping,
   RingGeometry,
   Scene,
   SphereGeometry,
@@ -42,12 +46,20 @@ type BodyEntry = {
   radius: number
   x: number
   kind: 'sphere' | 'disk' | 'card'
+  /** Horizontal half-extent as a multiple of `radius` (rings / wide cards > 1) */
+  clearance: number
 }
 
-const FOCUS_R = 1.55
-const GAP = 0.85
+/** Screen size of the focused body — constant; neighbors scale relative to this */
+const FOCUS_R = 1.05
+const PAD = 0.22
+const SCALE_POWER = 1
+const MIN_R = 0.012
+const MAX_R = 24
 const FLOOR_Y = 0
-const CAM_DIST = 7.2
+const CAM_DIST = 9.4
+const CAM_FOV = 36
+const RING_CLEARANCE = 2.35
 
 export function createCosmicScene(
   canvas: HTMLCanvasElement,
@@ -68,16 +80,16 @@ export function createCosmicScene(
   const scene = new Scene()
   scene.background = new Color(0x000000)
 
-  // High enough to read the perspective grid stage
-  const camera = new PerspectiveCamera(36, 1, 0.05, 800)
-  camera.position.set(0, 1.85, CAM_DIST)
+  const camera = new PerspectiveCamera(CAM_FOV, 1, 0.05, 800)
+  camera.position.set(0, FOCUS_R * 0.9, CAM_DIST)
+  camera.lookAt(0, FOCUS_R * 0.45, 0)
 
-  const key = new DirectionalLight(0xffffff, 1.55)
-  key.position.set(3.5, 5, 6)
+  const key = new DirectionalLight(0xffffff, 1.65)
+  key.position.set(2.8, 5.5, 5)
   scene.add(key)
-  scene.add(new AmbientLight(0xffffff, 0.28))
+  scene.add(new AmbientLight(0xffffff, 0.32))
 
-  const stage = createStage()
+  const stage = createMirrorStage()
   scene.add(stage.root)
 
   const loader = new TextureLoader()
@@ -88,7 +100,12 @@ export function createCosmicScene(
     resolveReady = r
   })
 
-  let camX = 0
+  /** Hard-lock camera — X and Z are pure functions of scale (no damp = no shake) */
+  const lockCamera = (focusX: number, camZ: number) => {
+    camera.position.set(focusX, FOCUS_R * 0.9, camZ)
+    camera.lookAt(focusX, FOCUS_R * 0.45, 0)
+    stage.root.position.x = focusX
+  }
 
   const loadAll = async () => {
     const sorted = [...catalog].sort((a, b) => a.sizeMeters - b.sizeMeters)
@@ -113,10 +130,9 @@ export function createCosmicScene(
 
     const earthIdx = bodies.findIndex((b) => b.object.id === 'earth')
     const startIdx = earthIdx >= 0 ? earthIdx : Math.floor(bodies.length / 2)
-    layoutBodies(bodies, startIdx, 1)
-    camX = bodies[startIdx].x
-    camera.position.x = camX
-    stage.root.position.x = camX
+    const focusX = layoutBodies(bodies, startIdx)
+    applyVisibility(bodies, startIdx)
+    lockCamera(focusX, CAM_DIST)
 
     resolveReady(loaded)
   }
@@ -130,53 +146,34 @@ export function createCosmicScene(
       camera.updateProjectionMatrix()
       renderer.setSize(w, h, false)
     },
-    update: (state, time, dt) => {
+    update: (state, time, _dt) => {
       if (bodies.length === 0) {
         renderer.render(scene, camera)
         return
       }
 
-      const focusIdx = MathUtils.clamp(
-        Math.round(state.focusIndexSmooth),
-        0,
-        bodies.length - 1,
-      )
-
-      layoutBodies(bodies, state.focusIndexSmooth, Math.min(1, 14 * dt))
-
-      const i0 = Math.floor(state.focusIndexSmooth)
-      const i1 = Math.min(bodies.length - 1, i0 + 1)
-      const frac = state.focusIndexSmooth - i0
-      const targetX = MathUtils.lerp(bodies[i0].x, bodies[i1].x, frac)
-      const focusR = MathUtils.lerp(bodies[i0].radius, bodies[i1].radius, frac)
-
-      const ease = 1 - Math.exp(-11 * dt)
-      camX += (targetX - camX) * ease
-
-      // Stage tracks the camera so the grid always fills the shelf
-      stage.root.position.x += (camX - stage.root.position.x) * ease
-
-      const targetZ = CAM_DIST * (FOCUS_R / Math.max(focusR, 0.35))
-      camera.position.x = camX
-      camera.position.y = 1.65 + focusR * 0.12
-      camera.position.z += (MathUtils.clamp(targetZ, 5.5, 14) - camera.position.z) * ease
-      camera.lookAt(camX, focusR * 0.35, 0)
+      const focusX = layoutBodies(bodies, state.focusIndexSmooth)
+      applyVisibility(bodies, state.focusIndexSmooth)
+      // Exact lock every frame — pan + Neal zoom dolly are pure fns of scale
+      lockCamera(focusX, nealDollyZ(bodies, state.focusIndexSmooth))
 
       for (let i = 0; i < bodies.length; i++) {
         const body = bodies[i]
         const dist = Math.abs(i - state.focusIndexSmooth)
         placeBody(body)
 
+        if (!body.root.visible) continue
+
         if (body.kind === 'sphere') {
-          body.root.rotation.y = time * (dist < 0.5 ? 0.1 : 0.035)
+          body.root.rotation.y = time * (dist < 0.5 ? 0.12 : 0.04)
           body.reflection.rotation.y = body.root.rotation.y
         } else {
-          const yaw = Math.atan2(camera.position.x - body.x, camera.position.z)
+          const yaw = Math.atan2(focusX - body.x, camera.position.z)
           body.root.rotation.set(0, yaw, 0)
           body.reflection.rotation.set(0, yaw, 0)
         }
 
-        const presence = MathUtils.clamp(1.15 - dist * 0.22, 0.4, 1)
+        const presence = MathUtils.clamp(1.2 - dist * 0.18, 0.35, 1)
         for (const mat of body.materials) {
           if (body.kind === 'sphere') {
             mat.transparent = false
@@ -186,20 +183,24 @@ export function createCosmicScene(
             mat.opacity = presence
           }
         }
-        // Glass reflection strength — stronger near focus, fades with distance
-        const reflStrength = (dist < 0.55 ? 0.55 : 0.32) * presence
+        const reflStrength = (dist < 0.55 ? 0.62 : 0.34) * presence
         for (const mat of body.reflMaterials) {
           mat.opacity = reflStrength
         }
       }
 
+      const focusIdx = MathUtils.clamp(
+        Math.round(state.focusIndexSmooth),
+        0,
+        bodies.length - 1,
+      )
       const focusBody = bodies[focusIdx]
       for (const mat of focusBody.materials) {
         mat.opacity = 1
         mat.transparent = focusBody.kind !== 'sphere'
       }
       for (const mat of focusBody.reflMaterials) {
-        mat.opacity = 0.58
+        mat.opacity = 0.62
       }
 
       renderer.render(scene, camera)
@@ -215,177 +216,122 @@ export function createCosmicScene(
   }
 }
 
-/** Minimal B&W perspective grid — the stage objects rest on */
-function createStage(): { root: Group; dispose: () => void } {
+/**
+ * Neal lineup: priors to the left + a peek of the next bodies on the right.
+ */
+function applyVisibility(bodies: BodyEntry[], focusSmooth: number) {
+  for (let i = 0; i < bodies.length; i++) {
+    const dist = i - focusSmooth
+    const show = dist >= -12 && dist <= 2.4
+    bodies[i].root.visible = show
+    bodies[i].reflection.visible = show
+  }
+}
+
+/** Black mirror stage — horizon hairline only, no grid (neal.fun) */
+function createMirrorStage(): { root: Group; dispose: () => void } {
   const root = new Group()
   root.name = 'stage'
 
-  const gridTex = createGridTexture()
-  gridTex.wrapS = RepeatWrapping
-  gridTex.wrapT = RepeatWrapping
-  // Long runway into depth; wide enough for the lineup
-  gridTex.repeat.set(48, 18)
-
-  const gridMat = new MeshBasicMaterial({
-    map: gridTex,
-    transparent: true,
-    opacity: 1,
-    depthWrite: false,
-    side: DoubleSide,
-  })
-
-  const grid = new Mesh(new PlaneGeometry(220, 90), gridMat)
-  grid.rotation.x = -Math.PI / 2
-  grid.position.set(0, FLOOR_Y + 0.001, -8)
-  grid.renderOrder = 0
-  root.add(grid)
-
-  // Soft horizon fade so the grid dissolves into the void
-  const fade = new Mesh(
-    new PlaneGeometry(220, 90),
+  const floor = new Mesh(
+    new PlaneGeometry(800, 120),
     new MeshBasicMaterial({
-      map: createFloorFadeTexture(),
+      color: 0x000000,
       transparent: true,
+      opacity: 0,
       depthWrite: false,
-      opacity: 1,
-      side: DoubleSide,
     }),
   )
-  fade.rotation.x = -Math.PI / 2
-  fade.position.set(0, FLOOR_Y + 0.002, -8)
-  fade.renderOrder = 1
-  root.add(fade)
+  floor.rotation.x = -Math.PI / 2
+  floor.position.set(0, FLOOR_Y, -10)
+  root.add(floor)
 
-  // Hairline horizon where stage meets void
   const horizon = new Mesh(
-    new PlaneGeometry(220, 0.015),
+    new PlaneGeometry(800, 0.012),
     new MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.14,
+      opacity: 0.22,
       depthWrite: false,
     }),
   )
-  horizon.position.set(0, FLOOR_Y + 0.003, 12)
+  horizon.rotation.x = -Math.PI / 2
+  horizon.position.set(0, FLOOR_Y + 0.002, 0)
   root.add(horizon)
 
   return {
     root,
     dispose: () => {
-      grid.geometry.dispose()
-      gridMat.dispose()
-      gridTex.dispose()
-      fade.geometry.dispose()
-      ;(fade.material as MeshBasicMaterial).map?.dispose()
-      ;(fade.material as MeshBasicMaterial).dispose()
-      horizon.geometry.dispose()
-      ;(horizon.material as MeshBasicMaterial).dispose()
+      root.traverse((child) => {
+        if (child instanceof Mesh) {
+          child.geometry.dispose()
+          ;(child.material as MeshBasicMaterial).dispose()
+        }
+      })
     },
   }
 }
 
-function createGridTexture(): CanvasTexture {
-  const size = 512
-  const c = document.createElement('canvas')
-  c.width = size
-  c.height = size
-  const ctx = c.getContext('2d')!
-  ctx.clearRect(0, 0, size, size)
-
-  const cells = 8
-  const step = size / cells
-
-  // Minor lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.10)'
-  ctx.lineWidth = 1
-  for (let i = 0; i <= cells; i++) {
-    const p = i * step + 0.5
-    ctx.beginPath()
-    ctx.moveTo(p, 0)
-    ctx.lineTo(p, size)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(0, p)
-    ctx.lineTo(size, p)
-    ctx.stroke()
-  }
-
-  // Major lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.22)'
-  ctx.lineWidth = 1.25
-  for (let i = 0; i <= cells; i += 2) {
-    const p = i * step + 0.5
-    ctx.beginPath()
-    ctx.moveTo(p, 0)
-    ctx.lineTo(p, size)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(0, p)
-    ctx.lineTo(size, p)
-    ctx.stroke()
-  }
-
-  const tex = new CanvasTexture(c)
-  tex.magFilter = LinearFilter
-  tex.minFilter = LinearFilter
-  tex.needsUpdate = true
-  return tex
-}
-
-/** Darkens the far/near edges of the stage so the grid feels finite */
-function createFloorFadeTexture(): CanvasTexture {
-  const c = document.createElement('canvas')
-  c.width = 4
-  c.height = 256
-  const ctx = c.getContext('2d')!
-  const g = ctx.createLinearGradient(0, 0, 0, 256)
-  g.addColorStop(0, 'rgba(0,0,0,0.92)')
-  g.addColorStop(0.22, 'rgba(0,0,0,0.15)')
-  g.addColorStop(0.55, 'rgba(0,0,0,0)')
-  g.addColorStop(0.82, 'rgba(0,0,0,0.25)')
-  g.addColorStop(1, 'rgba(0,0,0,0.95)')
-  ctx.fillStyle = g
-  ctx.fillRect(0, 0, 4, 256)
-  const tex = new CanvasTexture(c)
-  tex.needsUpdate = true
-  return tex
-}
-
-function layoutBodies(bodies: BodyEntry[], focusSmooth: number, blend: number) {
+/**
+ * Lay out the shelf for the current scale and return the focus X.
+ * Camera must hard-lock to this value — do not ease toward it.
+ * Focus size interpolates in log-space (Neal-even zoom across size jumps).
+ */
+function layoutBodies(bodies: BodyEntry[], focusSmooth: number): number {
   const i0 = Math.floor(focusSmooth)
   const i1 = Math.min(bodies.length - 1, Math.max(0, i0 + 1))
-  const frac = focusSmooth - Math.floor(focusSmooth)
-  const focusSize = MathUtils.lerp(
-    bodies[MathUtils.clamp(i0, 0, bodies.length - 1)].object.sizeMeters,
-    bodies[i1].object.sizeMeters,
-    MathUtils.clamp(frac, 0, 1),
+  const frac = MathUtils.clamp(focusSmooth - i0, 0, 1)
+  const s0 = bodies[MathUtils.clamp(i0, 0, bodies.length - 1)].object.sizeMeters
+  const s1 = bodies[i1].object.sizeMeters
+  // Log lerp — linear meter lerp spends the whole pan near the larger body
+  const focusSize = Math.exp(
+    MathUtils.lerp(Math.log(Math.max(s0, 1e-30)), Math.log(Math.max(s1, 1e-30)), frac),
   )
 
-  const targetRadii = bodies.map((b) => {
-    const ratio = b.object.sizeMeters / Math.max(focusSize, 1e-30)
-    const r = FOCUS_R * Math.pow(ratio, 0.42)
-    return MathUtils.clamp(r, 0.06, 14)
-  })
-
   for (let i = 0; i < bodies.length; i++) {
-    bodies[i].radius += (targetRadii[i] - bodies[i].radius) * blend
+    const ratio = bodies[i].object.sizeMeters / Math.max(focusSize, 1e-30)
+    bodies[i].radius = MathUtils.clamp(
+      FOCUS_R * Math.pow(ratio, SCALE_POWER),
+      MIN_R,
+      MAX_R,
+    )
   }
 
   let x = 0
   bodies[0].x = 0
   for (let i = 1; i < bodies.length; i++) {
-    x += bodies[i - 1].radius + bodies[i].radius + GAP
-    bodies[i].x = x
+    const prev = bodies[i - 1]
+    const curr = bodies[i]
+    x += prev.radius * prev.clearance + curr.radius * curr.clearance + PAD * FOCUS_R
+    curr.x = x
   }
+
+  return MathUtils.lerp(bodies[i0].x, bodies[i1].x, frac)
 }
 
+/**
+ * Neal mid-transition dolly: pull back when zooming out to something larger,
+ * ease in when zooming in — pure function of scale, zero lag.
+ */
+function nealDollyZ(bodies: BodyEntry[], focusSmooth: number): number {
+  const i0 = Math.floor(focusSmooth)
+  const i1 = Math.min(bodies.length - 1, Math.max(0, i0 + 1))
+  const frac = focusSmooth - i0
+  if (i0 === i1 || frac < 1e-4 || frac > 1 - 1e-4) return CAM_DIST
+
+  const s0 = Math.max(bodies[i0].object.sizeMeters, 1e-30)
+  const s1 = Math.max(bodies[i1].object.sizeMeters, 1e-30)
+  const logJump = Math.log(s1 / s0)
+  const amp = Math.min(0.9, Math.abs(logJump) * 0.16)
+  const envelope = Math.sin(Math.PI * frac)
+  return CAM_DIST * (1 + Math.sign(logJump || 1) * amp * envelope)
+}
 function placeBody(body: BodyEntry) {
   const r = body.radius
   body.root.position.set(body.x, FLOOR_Y + r, 0)
   body.root.scale.setScalar(r)
   body.root.renderOrder = 2
 
-  // Glass mirror — flipped under the stage plane (must stay visible: grid is transparent)
   body.reflection.position.set(body.x, FLOOR_Y - r, 0)
   body.reflection.scale.set(r, -r, r)
   body.reflection.renderOrder = -1
@@ -398,6 +344,8 @@ async function createBody(obj: CosmicObject, loader: TextureLoader): Promise<Bod
   const tex = await loadTexture(loader, `/cosmic/${obj.src}`)
 
   const kind = resolveKind(obj)
+  let clearance = 1
+
   if (kind === 'sphere') {
     const mat = new MeshStandardMaterial({
       map: tex,
@@ -422,6 +370,7 @@ async function createBody(obj: CosmicObject, loader: TextureLoader): Promise<Bod
       const ring = new Mesh(new RingGeometry(1.25, 2.05, 72), ringMat)
       ring.rotation.x = Math.PI / 2.3
       root.add(ring)
+      clearance = RING_CLEARANCE
     }
   } else if (kind === 'disk') {
     const mat = new MeshBasicMaterial({
@@ -445,8 +394,8 @@ async function createBody(obj: CosmicObject, loader: TextureLoader): Promise<Bod
       depthWrite: false,
     })
     materials.push(mat)
-    const plane = new Mesh(new PlaneGeometry(w, h), mat)
-    root.add(plane)
+    root.add(new Mesh(new PlaneGeometry(w, h), mat))
+    clearance = Math.max(1, w / 2)
   }
 
   const reflection = root.clone(true)
@@ -480,10 +429,10 @@ async function createBody(obj: CosmicObject, loader: TextureLoader): Promise<Bod
     radius: FOCUS_R,
     x: 0,
     kind,
+    clearance,
   }
 }
 
-/** Fade reflection by world height — bright at the stage, dissolving into the void */
 function injectGlassFade(mat: MeshStandardMaterial | MeshBasicMaterial) {
   mat.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader

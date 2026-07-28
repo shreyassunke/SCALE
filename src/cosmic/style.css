@@ -1,9 +1,9 @@
-/* Cosmic Scale — neal.fun shelf comparison, SCALE chrome */
+/* Cosmic Scale — neal.fun/size-of-space canon, SCALE chrome */
 
 :root {
   --void: #000000;
   --signal: #ffffff;
-  --signal-dim: #9a9a9a;
+  --signal-dim: #b0b0b0;
   --signal-faint: #767676;
   --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-hud: 'Azeret Mono', ui-monospace, monospace;
@@ -31,7 +31,6 @@ body {
   z-index: 0;
 }
 
-/* Almost no grain — keep the void clean like neal.fun */
 .grain {
   display: none;
 }
@@ -40,24 +39,18 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
   z-index: 3;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.35rem 1.75rem;
+  padding: 1.25rem 1.5rem;
   pointer-events: none;
-  background: none;
 }
 
 .brand-link {
   pointer-events: auto;
   margin: 0;
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--signal);
   text-decoration: none;
@@ -65,7 +58,7 @@ body {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  padding: 0.35rem 0.15rem;
+  padding: 0.25rem 0.1rem;
 }
 
 .brand-link:hover,
@@ -82,10 +75,11 @@ body {
   display: none;
 }
 
+/* Title + metric subtitle: one tight group, top center, clear of the shelf */
 #focus-overlay {
   position: fixed;
   left: 50%;
-  top: 12%;
+  top: max(1.25rem, 5.5vh);
   transform: translateX(-50%);
   z-index: 3;
   width: min(92vw, 36rem);
@@ -96,36 +90,35 @@ body {
 .focus-name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.75rem, 8vw, 5rem);
+  font-size: clamp(2.1rem, 5.2vw, 3.5rem);
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.02;
   letter-spacing: -0.035em;
   color: var(--signal);
-  text-shadow: none;
+  text-wrap: balance;
 }
 
 .focus-blurb {
-  margin: 0.65rem 0 0;
+  margin: 0.55rem 0 0;
   font-family: var(--font-display);
-  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-size: clamp(0.88rem, 1.4vw, 1.05rem);
   font-weight: 400;
-  line-height: 1.35;
+  line-height: 1.4;
   color: var(--signal-dim);
-}
-
-.focus-scale {
-  display: none;
+  text-wrap: pretty;
+  max-width: 34rem;
+  margin-inline: auto;
 }
 
 #focus-overlay.focus-swap .focus-name,
 #focus-overlay.focus-swap .focus-blurb {
-  animation: focusIn 0.4s ease both;
+  animation: focusIn 0.45s ease both;
 }
 
 @keyframes focusIn {
   from {
     opacity: 0;
-    transform: translateY(0.35rem);
+    transform: translateY(0.4rem);
   }
   to {
     opacity: 1;
@@ -234,11 +227,21 @@ body {
 
 @media (max-width: 640px) {
   #hud {
-    padding: 1rem 1.15rem;
+    padding: 0.85rem 1.1rem;
   }
 
   #focus-overlay {
-    top: 10%;
+    top: max(3.75rem, 4vh);
+    width: min(94vw, 36rem);
+  }
+
+  .focus-name {
+    font-size: clamp(1.75rem, 7vw, 2.4rem);
+  }
+
+  .focus-blurb {
+    margin-top: 0.4rem;
+    font-size: clamp(0.82rem, 3.4vw, 0.95rem);
   }
 }
 

@@ -3,6 +3,8 @@
 All files under `public/cosmic/` are imported from scientific / public sources.
 Do not replace with AI or procedural fakes.
 
+Site-wide policy and source map for all SCALE tracks: [`ASSET_SOURCES.md`](../../ASSET_SOURCES.md).
+
 ## Planet / moon albedo maps
 
 | Asset | Source | License |
@@ -24,13 +26,25 @@ Downloaded from [images-assets.nasa.gov](https://images-assets.nasa.gov/). NASA 
 | `earth_apollo`, `moon_apollo` | Apollo archive |
 | `local_universe`, `observable_universe` | NASA cosmology imagery |
 
-## Wikimedia Commons
+## Wikimedia Commons / public domain (micro → mountain ladder)
 
 | Folder | Notes |
 |--------|-------|
 | `dna` | DNA structure diagram |
 | `pollen` | Pollen SEM |
+| `sand` | River sand grains (CC Commons) |
+| `ant` | Meat ant photograph (CC Commons) |
+| `elephant` | African bush elephant (CC Commons) |
+| `house` | HABS Pauline Kilker House — Library of Congress public domain |
+| `tree` | Giant sequoia trunk (CC Commons) |
+| `skyscraper` | Empire State Building aerial (CC Commons) |
 | `everest` | Mount Everest photograph |
+
+## Human scale
+
+| Folder | Notes |
+|--------|-------|
+| `human` | Preview still from [Renderpeople Free](https://renderpeople.com/free-3d-people/) scanned person (free commercial use per Renderpeople ToU) |
 
 Attribution for CC-licensed Solar System Scope textures: **Solar System Scope** / NASA underlying data.
 

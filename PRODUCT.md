@@ -36,7 +36,7 @@ Not an encyclopedia or a dashboard of facts. A cinematic, quiet interface where 
 
 - Product name: **SCALE**.
 - Aesthetic (binding): vast, quiet, cinematic, calm, minimalist. Hub and HUD chrome are **strict black and white**. Signal over noise. Never bright neon or off-theme chrome color that adds noise.
-- Environment exception: Cosmic Scale may show **photoreal chromatic scientific content** (focused object saturated; neighbors desaturate). Chrome remains monochrome.
+- Environment exception: Cosmic Scale and **7 Dimensions** may show **chromatic cinematic journey content** (photoreal scientific imagery / PBR materials under shared HDRI). Chrome remains monochrome. Never neon / toy-WebGL additive kits on either journey.
 - Intent: feel like a visual simulation tool, not a marketing site.
 
 ## Evidence on Hand

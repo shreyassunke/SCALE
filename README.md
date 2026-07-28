@@ -29,5 +29,6 @@ npm run dev
 | Levels of Consciousness | Coming soon |
 | Levels of Civilizations | Coming soon |
 
+Site-wide open-source asset catalog: `ASSET_SOURCES.md`.
 Cosmic assets and credits: `public/cosmic/SOURCES.md`.
 Design system: see `PRODUCT.md` and `DESIGN.md`.

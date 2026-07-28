@@ -1,99 +1,119 @@
 import {
-  AdditiveBlending,
-  BufferAttribute,
-  BufferGeometry,
   Color,
+  CylinderGeometry,
   Group,
-  Line,
-  LineBasicMaterial,
-  Sprite,
-  SpriteMaterial,
-  CanvasTexture,
+  Mesh,
+  MeshStandardMaterial,
+  SphereGeometry,
   Vector3,
 } from 'three'
 import type { DimensionModule, DimensionContext } from './types'
-
-function makeDotTexture(): CanvasTexture {
-  const size = 64
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const ctx = canvas.getContext('2d')!
-  const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
-  g.addColorStop(0, 'rgba(255,255,255,1)')
-  g.addColorStop(0.4, 'rgba(180,220,255,0.7)')
-  g.addColorStop(1, 'rgba(0,0,0,0)')
-  ctx.fillStyle = g
-  ctx.fillRect(0, 0, size, size)
-  const tex = new CanvasTexture(canvas)
-  tex.needsUpdate = true
-  return tex
-}
+import type { PerfSettings } from '../../utils/perf'
+import { Cinema } from '../cinematic/palette'
+import {
+  DimensionAssets,
+  applyPbrMaps,
+  disposeObject3D,
+  loadGlb,
+  loadPbrSet,
+  setGroupOpacity,
+} from '../cinematic/loaders'
 
 const LINE_HALF = 2.2
-/** Obstacle sits ahead on the +x side — traveler cannot bypass it */
 const OBSTACLE_X = 0.85
 
-export function createLine1D(): DimensionModule {
+/**
+ * 1D — metal filament axis with a blocked traveler.
+ * Materials from ambientCG metal; optional brass accent as the obstacle mass.
+ */
+export function createLine1D(perf: PerfSettings): DimensionModule {
   const group = new Group()
   group.name = 'Line1D'
 
   let mounted = false
-  let line: Line | null = null
-  let traveler: Sprite | null = null
-  let obstacle: Sprite | null = null
-  let endA: Sprite | null = null
-  let endB: Sprite | null = null
-  let tex: CanvasTexture | null = null
+  let filament: Mesh | null = null
+  let traveler: Mesh | null = null
+  let endA: Mesh | null = null
+  let endB: Mesh | null = null
+  let obstacle: Group | Mesh | null = null
+  let filamentMat: MeshStandardMaterial | null = null
 
   const mount = () => {
     if (mounted) return
-    tex = makeDotTexture()
 
-    const positions = new Float32Array([-LINE_HALF, 0, 0, LINE_HALF, 0, 0])
-    const geo = new BufferGeometry()
-    geo.setAttribute('position', new BufferAttribute(positions, 3))
-    line = new Line(
-      geo,
-      new LineBasicMaterial({
-        color: new Color('#d7ecff'),
+    filamentMat = new MeshStandardMaterial({
+      color: new Color(Cinema.metalSteel),
+      roughness: 0.35,
+      metalness: 0.85,
+      transparent: true,
+      opacity: 0,
+      emissive: new Color(Cinema.fillCool),
+      emissiveIntensity: 0.08,
+    })
+
+    filament = new Mesh(new CylinderGeometry(0.018, 0.018, LINE_HALF * 2, 20), filamentMat)
+    filament.rotation.z = Math.PI / 2
+
+    const tipMat = new MeshStandardMaterial({
+      color: new Color(Cinema.signal),
+      emissive: new Color(Cinema.spacetimeCore),
+      emissiveIntensity: 0.9,
+      roughness: 0.3,
+      metalness: 0.2,
+      transparent: true,
+      opacity: 0,
+    })
+    traveler = new Mesh(new SphereGeometry(0.055, 20, 20), tipMat.clone())
+    endA = new Mesh(new SphereGeometry(0.032, 16, 16), tipMat.clone())
+    endB = new Mesh(new SphereGeometry(0.032, 16, 16), tipMat.clone())
+
+    const fallbackObstacle = new Mesh(
+      new SphereGeometry(0.09, 20, 20),
+      new MeshStandardMaterial({
+        color: new Color(Cinema.eventAmber),
+        emissive: new Color(Cinema.eventAmber),
+        emissiveIntensity: 0.45,
+        roughness: 0.4,
+        metalness: 0.5,
         transparent: true,
         opacity: 0,
-        blending: AdditiveBlending,
-        depthWrite: false,
       }),
     )
+    fallbackObstacle.position.set(OBSTACLE_X, 0, 0)
+    obstacle = fallbackObstacle
 
-    const spriteMat = (color: string) =>
-      new SpriteMaterial({
-        map: tex!,
-        color: new Color(color),
-        transparent: true,
-        opacity: 0,
-        blending: AdditiveBlending,
-        depthWrite: false,
-      })
-
-    traveler = new Sprite(spriteMat('#ffffff'))
-    traveler.scale.setScalar(0.12)
-    endA = new Sprite(spriteMat('#ffffff'))
-    endA.scale.setScalar(0.07)
-    endB = new Sprite(spriteMat('#ffffff'))
-    endB.scale.setScalar(0.07)
-
-    // Blocker on the axis — "any obstacle is the end of the universe"
-    obstacle = new Sprite(spriteMat('#ffb4a8'))
-    obstacle.scale.setScalar(0.16)
-    obstacle.position.set(OBSTACLE_X, 0, 0)
-
-    group.add(line, endA, endB, obstacle, traveler)
+    group.add(filament, endA, endB, obstacle, traveler)
     mounted = true
+
+    void loadPbrSet('metal', perf).then((maps) => {
+      if (filamentMat && mounted) applyPbrMaps(filamentMat, maps, 3)
+    })
+
+    void loadGlb(DimensionAssets.candle)
+      .then((model) => {
+        if (!mounted) {
+          disposeObject3D(model)
+          return
+        }
+        model.scale.setScalar(0.22)
+        model.position.set(OBSTACLE_X, -0.12, 0)
+        model.rotation.y = Math.PI * 0.25
+        setGroupOpacity(model, 0)
+        if (obstacle) group.remove(obstacle)
+        ;(obstacle as Mesh)?.geometry?.dispose()
+        ;((obstacle as Mesh)?.material as MeshStandardMaterial | undefined)?.dispose()
+        obstacle = model
+        group.add(model)
+      })
+      .catch(() => {
+        /* sphere fallback remains */
+      })
   }
 
   const tmp = new Vector3()
 
   const update = (ctx: DimensionContext) => {
-    if (!mounted || !line || !traveler || !endA || !endB || !obstacle) return
+    if (!filament || !traveler || !endA || !endB || !obstacle || !filamentMat) return
 
     const d = ctx.dimension
     const sp = ctx.sectionProgress
@@ -102,7 +122,6 @@ export function createLine1D(): DimensionModule {
     let opacity = 0
     let lengthScale = 0
 
-    // Form only once 1D section enter-morph begins (d crosses ~0.25)
     if (d < 0.25) {
       opacity = 0
       lengthScale = 0
@@ -122,54 +141,63 @@ export function createLine1D(): DimensionModule {
       lengthScale = 1
     }
 
-    const half = LINE_HALF * lengthScale
-    const pos = line.geometry.attributes.position as BufferAttribute
-    pos.setXYZ(0, -half, 0, 0)
-    pos.setXYZ(1, half, 0, 0)
-    pos.needsUpdate = true
+    const p = opacity * opacity * (3 - 2 * opacity)
+    const half = LINE_HALF * Math.max(0.002, lengthScale)
 
-    ;(line.material as LineBasicMaterial).opacity = opacity
+    filament.scale.set(1, Math.max(0.002, lengthScale), 1)
+    filamentMat.opacity = p
+
     endA.position.set(-half, 0, 0)
     endB.position.set(half, 0, 0)
-    endA.material.opacity = opacity * 0.9
-    endB.material.opacity = opacity * 0.9
+    ;(endA.material as MeshStandardMaterial).opacity = p * 0.9
+    ;(endB.material as MeshStandardMaterial).opacity = p * 0.9
 
-    // Obstacle lands with the late 1D copy beat (~0.8), not mid-0D
     const showObstacle = onLine ? sp >= 0.62 && sp < 0.98 : d >= 1.35 && d < 1.85
-    obstacle.position.set(OBSTACLE_X * lengthScale, 0, 0)
-    obstacle.material.opacity = showObstacle ? opacity * 0.95 : 0
+    obstacle.position.set(OBSTACLE_X * lengthScale, obstacle instanceof Group ? -0.12 : 0, 0)
+    if (obstacle instanceof Group) {
+      setGroupOpacity(obstacle, showObstacle ? p * 0.95 : 0)
+    } else {
+      ;(obstacle.material as MeshStandardMaterial).opacity = showObstacle ? p * 0.95 : 0
+    }
 
-    // Traveler oscillates but cannot pass the obstacle
     let travelX = -half
     const travelerLive = onLine ? sp >= 0.28 : d >= 0.85
     if (travelerLive && d < 2) {
       const phase = onLine ? Math.min(1, (sp - 0.28) / 0.35) : d < 1.15 ? (d - 0.85) / 0.3 : 1
       const raw = -half + (Math.sin(ctx.time * 0.85) * 0.5 + 0.5) * half * 2 * phase
-      const maxX = showObstacle ? OBSTACLE_X * lengthScale - 0.12 : half
+      const maxX = showObstacle ? OBSTACLE_X * lengthScale - 0.14 : half
       travelX = Math.min(raw, maxX)
     }
 
     traveler.position.copy(tmp.set(travelX, 0, 0))
-    traveler.material.opacity = opacity * (travelerLive ? 1 : 0.25)
+    ;(traveler.material as MeshStandardMaterial).opacity = p * (travelerLive ? 1 : 0.25)
+    ;(traveler.material as MeshStandardMaterial).emissiveIntensity =
+      0.7 + Math.sin(ctx.time * 2) * 0.15
   }
 
   const dispose = () => {
     if (!mounted) return
+    mounted = false
     group.clear()
-    line?.geometry.dispose()
-    ;(line?.material as LineBasicMaterial | undefined)?.dispose()
-    traveler?.material.dispose()
-    obstacle?.material.dispose()
-    endA?.material.dispose()
-    endB?.material.dispose()
-    tex?.dispose()
-    line = null
+    filament?.geometry.dispose()
+    filamentMat?.dispose()
+    traveler?.geometry.dispose()
+    ;(traveler?.material as MeshStandardMaterial | undefined)?.dispose()
+    endA?.geometry.dispose()
+    ;(endA?.material as MeshStandardMaterial | undefined)?.dispose()
+    endB?.geometry.dispose()
+    ;(endB?.material as MeshStandardMaterial | undefined)?.dispose()
+    if (obstacle instanceof Group) disposeObject3D(obstacle)
+    else {
+      ;(obstacle as Mesh | null)?.geometry?.dispose()
+      ;((obstacle as Mesh | null)?.material as MeshStandardMaterial | undefined)?.dispose()
+    }
+    filament = null
     traveler = null
-    obstacle = null
     endA = null
     endB = null
-    tex = null
-    mounted = false
+    obstacle = null
+    filamentMat = null
   }
 
   return {

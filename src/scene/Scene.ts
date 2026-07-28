@@ -1,12 +1,15 @@
 import {
+  ACESFilmicToneMapping,
   AmbientLight,
   Color,
+  DirectionalLight,
   Fog,
+  MathUtils,
   PerspectiveCamera,
   Scene,
-  WebGLRenderer,
+  SRGBColorSpace,
   Vector3,
-  MathUtils,
+  WebGLRenderer,
 } from 'three'
 import type { PerfSettings } from '../utils/perf'
 import type { ScrollState } from '../scroll/scrollEngine'
@@ -19,6 +22,9 @@ import { createSpacetime4D } from './dimensions/Spacetime4D'
 import { createBranching5D } from './dimensions/Branching5D'
 import { createLandscape6D } from './dimensions/Landscape6D'
 import { createLogical7D } from './dimensions/Logical7D'
+import { loadDimensionEnvironment, disposeDimensionEnvironment } from './cinematic/environment'
+import { createCinematicPost, bloomForDimension, type CinematicPost } from './cinematic/post'
+import { Cinema, CinemaExposure } from './cinematic/palette'
 
 export type DimensionScene = {
   renderer: WebGLRenderer
@@ -34,28 +40,30 @@ type CamKeyframe = {
 }
 
 const CAMERA_PATH: CamKeyframe[] = [
-  { at: 0, position: new Vector3(0, 0, 3.2), lookAt: new Vector3(0, 0, 0) },
-  { at: 1, position: new Vector3(0.2, 0.35, 4.2), lookAt: new Vector3(0, 0, 0) },
-  { at: 2, position: new Vector3(1.2, 2.4, 3.6), lookAt: new Vector3(0, 0, 0) },
-  { at: 3, position: new Vector3(3.2, 2.2, 3.8), lookAt: new Vector3(0, 0, 0) },
-  // 4D: slight side angle so the worm reads as a volume, not a flat strip
-  { at: 4, position: new Vector3(0.85, 1.05, 5.2), lookAt: new Vector3(0.1, 0.1, 0) },
-  { at: 5, position: new Vector3(0.15, 1.35, 6.3), lookAt: new Vector3(0, 0.35, 0) },
-  // 6D: pull back into the tunnel
-  { at: 6, position: new Vector3(0, 0.35, 6.8), lookAt: new Vector3(0, 0, -0.4) },
-  { at: 7, position: new Vector3(0.2, 0.15, 5.4), lookAt: new Vector3(0, 0, 0) },
-  { at: 7.35, position: new Vector3(0, 0, 4.2), lookAt: new Vector3(0, 0, 0) },
+  { at: 0, position: new Vector3(0, 0.15, 3.4), lookAt: new Vector3(0, 0.05, 0) },
+  { at: 1, position: new Vector3(0.15, 0.25, 4.0), lookAt: new Vector3(0, 0, 0) },
+  { at: 2, position: new Vector3(1.35, 2.55, 3.5), lookAt: new Vector3(0, 0.1, 0) },
+  // 3D — intimate grasp framing
+  { at: 3, position: new Vector3(1.8, 1.35, 3.2), lookAt: new Vector3(0.2, 0.7, 0.1) },
+  // 4D — pull back to see editor stage
+  { at: 4, position: new Vector3(0.2, 0.85, 5.6), lookAt: new Vector3(0, 0.2, -0.2) },
+  // 5D — alternate takes
+  { at: 5, position: new Vector3(0.15, 0.9, 6.2), lookAt: new Vector3(0, 0.1, 0) },
+  // 6D — warped clones
+  { at: 6, position: new Vector3(0, 0.55, 6.8), lookAt: new Vector3(0, 0.1, -0.2) },
+  // 7D — catalog density
+  { at: 7, position: new Vector3(0.2, 0.35, 5.8), lookAt: new Vector3(0, 0, 0) },
+  { at: 7.35, position: new Vector3(0.1, 0.25, 4.4), lookAt: new Vector3(0.15, 0.55, 0) },
 ]
 
-const BG_BASE = new Color('#000000')
-const BG_DEEP = new Color('#000000')
+const BG = new Color(Cinema.void)
 const _bg = new Color()
 
 const _camPos = new Vector3()
 const _camLook = new Vector3()
 const _lookSmooth = new Vector3(0, 0, 0)
-const _homePos = new Vector3(3.2, 2.2, 3.8)
-const _homeLook = new Vector3(0, 0, 0)
+const _homePos = new Vector3(1.8, 1.35, 3.2)
+const _homeLook = new Vector3(0.2, 0.7, 0.1)
 const _codaFromPos = new Vector3()
 const _codaFromLook = new Vector3()
 
@@ -79,8 +87,6 @@ function shouldBeMounted(
   progress: number,
 ): boolean {
   const coda = section === 'coda'
-  // Mount windows match holdDimension() — next dim stays unmounted
-  // until its own section's enter-morph begins.
   switch (name) {
     case 'Point0D':
       return !coda && dimension < 1.55
@@ -95,9 +101,9 @@ function shouldBeMounted(
     case 'Branching5D':
       return !coda && dimension > 4.55 && dimension < 6.55
     case 'Landscape6D':
-      return !coda && dimension > 5.55 && dimension < 7.4
+      // Unmount before catalog fully forms — overlapping giants read as multi-limb glitches
+      return !coda && dimension > 5.55 && dimension < 6.9
     case 'Logical7D':
-      // Collapse early, then dispose so only the solid room remains
       return coda ? progress < 0.42 : dimension > 6.55
     default:
       return true
@@ -106,12 +112,11 @@ function shouldBeMounted(
 
 export function createScene(canvas: HTMLCanvasElement, perf: PerfSettings): DimensionScene {
   const scene = new Scene()
-  scene.background = BG_BASE.clone()
-  // Soft depth fog — stronger past 3D so overlapping dims separate cleanly
-  scene.fog = new Fog('#000000', 8, 22)
+  scene.background = BG.clone()
+  scene.fog = new Fog(Cinema.void, 8, 22)
 
   const camera = new PerspectiveCamera(45, 1, 0.1, 100)
-  camera.position.set(0, 0, 3.2)
+  camera.position.set(0, 0.15, 3.4)
 
   const renderer = new WebGLRenderer({
     canvas,
@@ -120,14 +125,24 @@ export function createScene(canvas: HTMLCanvasElement, perf: PerfSettings): Dime
     powerPreference: 'high-performance',
   })
   renderer.setPixelRatio(perf.pixelRatio)
-  renderer.setClearColor(BG_BASE, 1)
+  renderer.setClearColor(BG, 1)
+  renderer.outputColorSpace = SRGBColorSpace
+  renderer.toneMapping = ACESFilmicToneMapping
+  renderer.toneMappingExposure = CinemaExposure.base
 
-  scene.add(new AmbientLight(0xffffff, 0.55))
+  const ambient = new AmbientLight(Cinema.fillCool, 0.18)
+  const key = new DirectionalLight(Cinema.keyWarm, 1.15)
+  key.position.set(4.2, 6.5, 3.5)
+  const fill = new DirectionalLight(Cinema.fillCool, 0.35)
+  fill.position.set(-3.5, 1.5, -2.5)
+  scene.add(ambient, key, fill)
+
+  void loadDimensionEnvironment(renderer, scene)
 
   const modules: DimensionModule[] = [
     createPoint0D(perf),
-    createLine1D(),
-    createPlane2D(),
+    createLine1D(perf),
+    createPlane2D(perf),
     createVolume3D(perf),
     createSpacetime4D(perf),
     createBranching5D(perf),
@@ -140,6 +155,8 @@ export function createScene(canvas: HTMLCanvasElement, perf: PerfSettings): Dime
   }
 
   modules[0].mount()
+
+  const post: CinematicPost | null = createCinematicPost(renderer, scene, camera, perf)
 
   const update = (state: ScrollState, time: number) => {
     const { dimension, progress, globalProgress } = state
@@ -160,7 +177,6 @@ export function createScene(canvas: HTMLCanvasElement, perf: PerfSettings): Dime
       }
     }
 
-    // Coda: ease camera from 7D view → exact initial 3D framing (keyframe at 3)
     if (state.section === 'coda') {
       const camT = MathUtils.smoothstep(progress, 0.02, 0.32)
       sampleCamera(7.35, _codaFromPos, _codaFromLook)
@@ -174,12 +190,11 @@ export function createScene(canvas: HTMLCanvasElement, perf: PerfSettings): Dime
     _lookSmooth.lerp(_camLook, camLerp)
     camera.lookAt(_lookSmooth)
 
-    // Deepen void past 3D; coda clears haze as we return home
     let deep = MathUtils.clamp((dimension - 3.2) / 3.5, 0, 1)
     if (state.section === 'coda') {
       deep *= 1 - MathUtils.smoothstep(progress, 0.1, 0.5)
     }
-    _bg.copy(BG_BASE).lerp(BG_DEEP, deep * 0.85)
+    _bg.copy(BG)
     scene.background = _bg
     renderer.setClearColor(_bg, 1)
     if (scene.fog instanceof Fog) {
@@ -188,13 +203,24 @@ export function createScene(canvas: HTMLCanvasElement, perf: PerfSettings): Dime
       scene.fog.far = MathUtils.lerp(24, 16, deep)
     }
 
-    renderer.render(scene, camera)
+    renderer.toneMappingExposure =
+      CinemaExposure.base -
+      deep * (CinemaExposure.base - CinemaExposure.deep) +
+      Math.sin(time * 0.35) * CinemaExposure.pulseAmp * (1 - deep * 0.5)
+
+    if (post) {
+      post.setBloomStrength(bloomForDimension(dimension, perf.bloomStrength))
+      post.render()
+    } else {
+      renderer.render(scene, camera)
+    }
   }
 
   const resize = (w: number, h: number) => {
     camera.aspect = w / Math.max(h, 1)
     camera.updateProjectionMatrix()
     renderer.setSize(w, h, false)
+    post?.resize(w, h)
   }
 
   const dispose = () => {
@@ -202,6 +228,8 @@ export function createScene(canvas: HTMLCanvasElement, perf: PerfSettings): Dime
       if (mod.mounted) mod.dispose()
       scene.remove(mod.group)
     }
+    post?.dispose()
+    disposeDimensionEnvironment(scene)
     renderer.dispose()
   }
 

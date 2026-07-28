@@ -1,194 +1,106 @@
-import {
-  AdditiveBlending,
-  BufferAttribute,
-  BufferGeometry,
-  Color,
-  Group,
-  LineLoop,
-  LineBasicMaterial,
-  MathUtils,
-  Points,
-  PointsMaterial,
-} from 'three'
+import { Group, MathUtils } from 'three'
 import type { DimensionModule, DimensionContext } from './types'
 import type { PerfSettings } from '../../utils/perf'
+import { createContinuityHero, type ContinuityHero } from './continuityHero'
+
+const WARPS: Array<'float' | 'sink' | 'crush' | 'drift'> = ['float', 'sink', 'crush', 'drift']
 
 /**
- * 6D metaphor: landscape of universes with different physical constants.
- * Contour shells + drifting field — a tunnel of alternate law-sets.
+ * 6D — same man+box under warped physics (not new takes — new constants).
+ * Clones scrub through the pickup with phase offsets so they stay alive, then
+ * fade before 7D catalog takes over (avoids stacked multi-limb silhouettes).
  */
 export function createLandscape6D(perf: PerfSettings): DimensionModule {
   const group = new Group()
   group.name = 'Landscape6D'
 
   let mounted = false
-  let field: Points | null = null
-  let shells: Group | null = null
-  let basePositions: Float32Array | null = null
+  let field: Group | null = null
+  let clones: ContinuityHero[] = []
+  let phases: number[] = []
 
   const mount = () => {
     if (mounted) return
 
-    const n = perf.tier === 'high' ? 560 : 240
-    const positions = new Float32Array(n * 3)
-    const colors = new Float32Array(n * 3)
-    basePositions = new Float32Array(n * 3)
-    const near = new Color('#7ec8ff')
-    const mid = new Color('#c8a0ff')
-    const far = new Color('#ff8a6a')
-    const tmp = new Color()
-
+    field = new Group()
+    const n = perf.tier === 'high' ? 4 : 3
+    clones = []
+    phases = []
     for (let i = 0; i < n; i++) {
-      // Layered shells — denser mid-field, sparser distance
-      const layer = i / n
-      const theta = i * 2.399
-      const phi = Math.acos(MathUtils.clamp(1 - 2 * ((i * 0.618) % 1), -1, 1))
-      // Prefer mid radii for clarity
-      const rBias = 0.35 + Math.pow(Math.sin(layer * Math.PI), 1.4) * 0.65
-      const r = 1.0 + rBias * 2.6
-      const x = r * Math.sin(phi) * Math.cos(theta)
-      const y = r * Math.sin(phi) * Math.sin(theta) * 0.7
-      const z = r * Math.cos(phi) * 0.85 - 0.4
-
-      positions[i * 3] = x
-      positions[i * 3 + 1] = y
-      positions[i * 3 + 2] = z
-      basePositions[i * 3] = x
-      basePositions[i * 3 + 1] = y
-      basePositions[i * 3 + 2] = z
-
-      // Depth-based color: cyan near → coral far
-      const depth = MathUtils.clamp((r - 1) / 2.6, 0, 1)
-      if (depth < 0.5) tmp.copy(near).lerp(mid, depth * 2)
-      else tmp.copy(mid).lerp(far, (depth - 0.5) * 2)
-      colors[i * 3] = tmp.r
-      colors[i * 3 + 1] = tmp.g
-      colors[i * 3 + 2] = tmp.b
+      const hero = createContinuityHero(perf)
+      const phase = i * 1.7
+      hero.scrubPickup(0.55 + i * 0.1, 0, phase)
+      hero.root.scale.setScalar(0.55)
+      const x = (i - (n - 1) / 2) * 1.55
+      hero.root.position.set(x, 0, -0.2 + (i % 2) * 0.25)
+      hero.setPhysicsWarp(WARPS[i % WARPS.length], 0)
+      hero.setOpacity(0)
+      field.add(hero.root)
+      clones.push(hero)
+      phases.push(phase)
     }
 
-    const geo = new BufferGeometry()
-    geo.setAttribute('position', new BufferAttribute(positions, 3))
-    geo.setAttribute('color', new BufferAttribute(colors, 3))
-
-    field = new Points(
-      geo,
-      new PointsMaterial({
-        size: 0.042,
-        transparent: true,
-        opacity: 0,
-        blending: AdditiveBlending,
-        depthWrite: false,
-        sizeAttenuation: true,
-        vertexColors: true,
-      }),
-    )
-
-    // Contour tunnel rings — nested law-landscape shells
-    shells = new Group()
-    const ringCount = perf.tier === 'high' ? 10 : 6
-    const segs = perf.tier === 'high' ? 48 : 32
-    for (let r = 0; r < ringCount; r++) {
-      const t = r / (ringCount - 1)
-      const radius = 0.9 + t * 2.4
-      const z = -1.8 + t * 3.6
-      const ringPos = new Float32Array(segs * 3)
-      for (let s = 0; s < segs; s++) {
-        const a = (s / segs) * Math.PI * 2
-        // Soft contour wobble
-        const wobble = 1 + Math.sin(a * 3 + t * 4) * 0.06
-        ringPos[s * 3] = Math.cos(a) * radius * wobble
-        ringPos[s * 3 + 1] = Math.sin(a) * radius * 0.72 * wobble
-        ringPos[s * 3 + 2] = z
-      }
-      const col = new Color().copy(near).lerp(far, t)
-      const loop = new LineLoop(
-        new BufferGeometry().setAttribute('position', new BufferAttribute(ringPos, 3)),
-        new LineBasicMaterial({
-          color: col,
-          transparent: true,
-          opacity: 0,
-          blending: AdditiveBlending,
-          depthWrite: false,
-        }),
-      )
-      loop.userData.t = t
-      shells.add(loop)
-    }
-
-    group.add(field, shells)
+    group.add(field)
     mounted = true
   }
 
   const update = (ctx: DimensionContext) => {
-    if (!mounted || !field || !shells || !basePositions) return
+    if (!mounted || !field) return
 
     const d = ctx.dimension
     let presence = 0
-    // Wait for 6D enter-morph — do not open the tunnel during late 5D commentary
-    if (d < 5.62) presence = 0
-    else if (d < 6) presence = (d - 5.62) / 0.38
-    else if (d < 6.7) presence = 1
-    else if (d < 7.25) presence = 1 - (d - 6.7) / 0.55
+    // Exit early as 7D catalog enters (~6.55) so warped giants don't stack on the shelf
+    if (d < 5.55) presence = 0
+    else if (d < 6) presence = (d - 5.55) / 0.45
+    else if (d < 6.5) presence = 1
+    else if (d < 6.85) presence = 1 - (d - 6.5) / 0.35
     else presence = 0
 
-    // Coda: dump the tunnel immediately so the 3D room can read cleanly
     if (ctx.section === 'coda') {
       presence *= Math.max(0, 1 - ctx.sectionProgress / 0.22)
     }
 
     const p = presence * presence * (3 - 2 * presence)
+    const warpAmt =
+      ctx.section === '6'
+        ? MathUtils.smoothstep(ctx.sectionProgress, 0.15, 0.85)
+        : MathUtils.clamp((d - 5.8) / 0.7, 0, 1)
 
-    ;(field.material as PointsMaterial).opacity = p * 0.85
-    ;(field.material as PointsMaterial).size = 0.038 + p * 0.012
-
-    // Forward drift through the landscape tunnel
-    const drift = ctx.time * 0.35
-    const posAttr = field.geometry.getAttribute('position') as BufferAttribute
-    const arr = posAttr.array as Float32Array
-    const n = basePositions.length / 3
-    for (let i = 0; i < n; i++) {
-      const bx = basePositions[i * 3]
-      const by = basePositions[i * 3 + 1]
-      const bz = basePositions[i * 3 + 2]
-      const breathe = 1 + Math.sin(ctx.time * 0.8 + i * 0.05) * 0.03 * p
-      arr[i * 3] = bx * breathe
-      arr[i * 3 + 1] = by * breathe
-      // Scroll Z — tunnel sensation
-      let z = bz + ((drift + i * 0.01) % 3.2) - 1.6
-      arr[i * 3 + 2] = z
-    }
-    posAttr.needsUpdate = true
-
-    for (const child of shells.children) {
-      const loop = child as LineLoop
-      const t = loop.userData.t as number
-      const midBoost = 1 - Math.abs(t - 0.45) * 1.2
-      ;(loop.material as LineBasicMaterial).opacity = p * Math.max(0.08, 0.15 + midBoost * 0.35)
-      // Rings drift toward camera
-      loop.position.z = ((ctx.time * 0.25 + t * 2) % 2.8) - 1.4
-      loop.rotation.z = ctx.time * 0.05 * (t > 0.5 ? 1 : -1)
+    for (let i = 0; i < clones.length; i++) {
+      const hero = clones[i]
+      const phase = phases[i]
+      const life = ctx.time * (0.7 + i * 0.05)
+      const n = clones.length
+      const x = (i - (n - 1) / 2) * 1.55
+      const z = -0.2 + (i % 2) * 0.25
+      // Ping-pong pickup so every clone moves full-body, not a frozen one-arm pose
+      const cycle = (ctx.time * 0.18 + phase) % 2
+      const t = cycle < 1 ? cycle : 2 - cycle
+      // Unwarped placement → pose → re-assert placement → warp once (avoids stacking at origin)
+      hero.root.position.set(x, 0, z)
+      hero.root.scale.setScalar(0.55)
+      hero.root.rotation.z = 0
+      hero.setPhysicsWarp('normal', 0)
+      hero.scrubPickup(0.15 + t * 0.8, life, phase)
+      hero.root.position.set(x, 0, z)
+      hero.root.scale.setScalar(0.55)
+      hero.root.rotation.z = 0
+      hero.setPhysicsWarp(WARPS[i % WARPS.length], warpAmt * p)
+      hero.setOpacity(p * (0.55 + (i === 0 ? 0.35 : 0.15)))
+      hero.root.rotation.y = ctx.time * 0.08 * (i % 2 === 0 ? 1 : -1) * p
     }
 
-    group.rotation.y = ctx.time * 0.04 * p
-    group.rotation.x = Math.sin(ctx.time * 0.11) * 0.1 * p
-    group.scale.setScalar(0.75 + p * 0.35)
+    field.rotation.y = ctx.time * 0.03 * p
+    group.scale.setScalar(0.85 + p * 0.2)
   }
 
   const dispose = () => {
     if (!mounted) return
+    for (const h of clones) h.dispose()
+    clones = []
+    phases = []
     group.clear()
-    field?.geometry.dispose()
-    ;(field?.material as PointsMaterial | undefined)?.dispose()
-    if (shells) {
-      for (const child of shells.children) {
-        const loop = child as LineLoop
-        loop.geometry.dispose()
-        ;(loop.material as LineBasicMaterial).dispose()
-      }
-    }
     field = null
-    shells = null
-    basePositions = null
     mounted = false
   }
 

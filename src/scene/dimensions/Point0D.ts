@@ -1,74 +1,63 @@
 import {
-  AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
   Color,
   Group,
+  Mesh,
+  MeshStandardMaterial,
   Points,
   PointsMaterial,
-  Sprite,
-  SpriteMaterial,
-  CanvasTexture,
+  SphereGeometry,
 } from 'three'
 import type { DimensionModule, DimensionContext } from './types'
 import type { PerfSettings } from '../../utils/perf'
+import { Cinema } from '../cinematic/palette'
+import {
+  DimensionAssets,
+  disposeObject3D,
+  loadGlb,
+  setGroupOpacity,
+} from '../cinematic/loaders'
 
-function makeGlowTexture(): CanvasTexture {
-  const size = 128
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const ctx = canvas.getContext('2d')!
-  const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
-  g.addColorStop(0, 'rgba(255,255,255,1)')
-  g.addColorStop(0.2, 'rgba(200,230,255,0.85)')
-  g.addColorStop(0.55, 'rgba(120,180,255,0.25)')
-  g.addColorStop(1, 'rgba(0,0,0,0)')
-  ctx.fillStyle = g
-  ctx.fillRect(0, 0, size, size)
-  const tex = new CanvasTexture(canvas)
-  tex.needsUpdate = true
-  return tex
-}
-
+/**
+ * 0D — singular presence in the void.
+ * Hero: Poly Haven ceramic vase; soft emissive core as point-of-existence glue.
+ */
 export function createPoint0D(perf: PerfSettings): DimensionModule {
   const group = new Group()
   group.name = 'Point0D'
 
   let mounted = false
-  let glow: Sprite | null = null
-  let core: Sprite | null = null
+  let hero: Group | null = null
+  let core: Mesh | null = null
+  let shell: Mesh | null = null
   let dust: Points | null = null
-  let glowTex: CanvasTexture | null = null
 
   const mount = () => {
     if (mounted) return
 
-    glowTex = makeGlowTexture()
-
-    const glowMat = new SpriteMaterial({
-      map: glowTex,
-      color: new Color('#cfe8ff'),
+    const coreMat = new MeshStandardMaterial({
+      color: new Color(Cinema.signal),
+      emissive: new Color(Cinema.spacetimeCore),
+      emissiveIntensity: 1.4,
+      roughness: 0.25,
+      metalness: 0.05,
       transparent: true,
-      opacity: 0.9,
-      blending: AdditiveBlending,
-      depthWrite: false,
+      opacity: 0,
     })
-    glow = new Sprite(glowMat)
-    glow.scale.setScalar(0.55)
+    core = new Mesh(new SphereGeometry(0.045, 24, 24), coreMat)
 
-    const coreMat = new SpriteMaterial({
-      map: glowTex,
-      color: new Color('#ffffff'),
+    const shellMat = new MeshStandardMaterial({
+      color: new Color(Cinema.spacetime),
+      emissive: new Color(Cinema.fillCool),
+      emissiveIntensity: 0.35,
+      roughness: 0.4,
+      metalness: 0.15,
       transparent: true,
-      opacity: 1,
-      blending: AdditiveBlending,
-      depthWrite: false,
+      opacity: 0,
     })
-    core = new Sprite(coreMat)
-    core.scale.setScalar(0.08)
+    shell = new Mesh(new SphereGeometry(0.14, 32, 32), shellMat)
 
-    // Still ambient dust — positions fixed, no motion
     const count = perf.dustCount
     const positions = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
@@ -79,62 +68,83 @@ export function createPoint0D(perf: PerfSettings): DimensionModule {
       positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.6
       positions[i * 3 + 2] = r * Math.cos(phi) - 2
     }
-    const dustGeo = new BufferGeometry()
-    dustGeo.setAttribute('position', new BufferAttribute(positions, 3))
-    const dustMat = new PointsMaterial({
-      color: new Color('#6a8aaa'),
-      size: 0.025,
-      transparent: true,
-      opacity: 0.35,
-      depthWrite: false,
-      blending: AdditiveBlending,
-      sizeAttenuation: true,
-    })
-    dust = new Points(dustGeo, dustMat)
+    dust = new Points(
+      new BufferGeometry().setAttribute('position', new BufferAttribute(positions, 3)),
+      new PointsMaterial({
+        color: new Color(Cinema.signalDim),
+        size: 0.02,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        sizeAttenuation: true,
+      }),
+    )
 
-    group.add(dust, glow, core)
+    group.add(dust, shell, core)
     mounted = true
+
+    void loadGlb(DimensionAssets.orb)
+      .then((model) => {
+        if (!mounted) {
+          disposeObject3D(model)
+          return
+        }
+        hero = model
+        hero.scale.setScalar(0.55)
+        hero.position.set(0, -0.35, 0)
+        setGroupOpacity(hero, 0)
+        group.add(hero)
+      })
+      .catch(() => {
+        /* core + shell still read as a point */
+      })
   }
 
   const update = (ctx: DimensionContext) => {
-    if (!mounted || !glow || !core || !dust) return
+    if (!core || !shell || !dust) return
 
     const d = ctx.dimension
-
-    // Hold full point through 0D; only smear/fade once 1D enter-morph begins
     const pointPresence = d < 0.2 ? 1 : d < 1 ? 1 - (d - 0.2) / 0.8 : 0
     const stretch = d < 0.25 ? 0 : d < 1 ? Math.max(0, (d - 0.25) / 0.75) : 1
+    const p = pointPresence * pointPresence * (3 - 2 * pointPresence)
 
-    // Stretch the glow into a horizontal smear as we leave 0D
-    const base = 0.55 + stretch * 2.2
-    glow.scale.set(base * (1 + stretch * 4), 0.55 * (1 - stretch * 0.7), 1)
-    glow.material.opacity = 0.15 + pointPresence * 0.75
-    core.material.opacity = pointPresence
-    core.scale.setScalar(0.08 * (1 - stretch * 0.5))
+    const coreMat = core.material as MeshStandardMaterial
+    const shellMat = shell.material as MeshStandardMaterial
+    coreMat.opacity = p
+    shellMat.opacity = p * (0.55 - stretch * 0.4)
+    core.scale.setScalar(1 - stretch * 0.4)
+    shell.scale.set(1 + stretch * 4.5, 1 - stretch * 0.65, 1 - stretch * 0.4)
 
-    const dustMat = dust.material as PointsMaterial
-    dustMat.opacity = 0.12 + pointPresence * 0.28
+    if (hero) {
+      setGroupOpacity(hero, p * (1 - stretch * 0.85))
+      hero.scale.setScalar(0.55 * (1 - stretch * 0.5))
+      hero.rotation.y = ctx.time * 0.08 * p
+    }
 
-    // Soft pulse only while still a point
+    ;(dust.material as PointsMaterial).opacity = 0.08 + p * 0.22
+
     if (d < 0.35 && perf.enableSoftGlow) {
-      const pulse = 1 + Math.sin(ctx.time * 1.2) * 0.04
-      core.scale.setScalar(0.08 * pulse)
+      const pulse = 1 + Math.sin(ctx.time * 1.1) * 0.04
+      core.scale.setScalar(pulse * (1 - stretch * 0.4))
+      coreMat.emissiveIntensity = 1.2 + Math.sin(ctx.time * 1.1) * 0.25
     }
   }
 
   const dispose = () => {
     if (!mounted) return
+    mounted = false
     group.clear()
-    glow?.material.dispose()
-    core?.material.dispose()
+    core?.geometry.dispose()
+    ;(core?.material as MeshStandardMaterial | undefined)?.dispose()
+    shell?.geometry.dispose()
+    ;(shell?.material as MeshStandardMaterial | undefined)?.dispose()
     dust?.geometry.dispose()
     ;(dust?.material as PointsMaterial | undefined)?.dispose()
-    glowTex?.dispose()
-    glow = null
+    if (hero) disposeObject3D(hero)
     core = null
+    shell = null
     dust = null
-    glowTex = null
-    mounted = false
+    hero = null
   }
 
   return {
